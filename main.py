@@ -1,11 +1,10 @@
-import uuid
-import json
-
+from function import *
 
 def start():
     # initialisation des variables :
     earthIsRound = 1
     earthIsFlat = 0
+    vote = []
     # Serveurs
     A = []
     E = []
@@ -23,7 +22,7 @@ def start():
         print("")
 
         if choice == 1:
-            addVote()
+            addVote(vote)
         elif choice == 2:
             saveVoter(A, E, S)
         elif choice == 3:
@@ -34,56 +33,5 @@ def start():
             counting()
         else:
             print("Sais-tu lire et compter ? \n")
-
-
-def addVote():
-    lname = input("Nom du candidat : ")
-    fname = input("Prénom du candidat : ")
-
-    print(lname, fname)
-
-    #Idée de stocker les candidats dans un json
-    #
-    #with open('candidat.json') as mon_fichier:
-    #    candidat = json.load(mon_fichier)
-    #
-    # with open('config.json', 'w') as mon_fichier:
-    #    json.dump(api, mon_fichier)
-
-    print("Vote ajouté ! \n")
-
-
-def saveVoter(A, E, S):
-    lname = input("Nom : ")
-    fname = input("Prénom : ")
-    email = input("Mail : ")
-    idUser = str(uuid.uuid4())
-
-    user = (lname, fname, email, idUser)
-    A.append(user)
-
-    E.append(len(A) - 1)
-
-    # envoyer les
-    createSecretKey()
-
-    print("Electeur enregistré ! \n")
-
-
-def saveVote():
-    print("Vote enregistré ! \n")
-
-
-def checkVote():
-    print("Vote vérifié ! \n")
-
-
-def counting():
-    print("Dépouillement fait ! \n")
-
-
-def createSecretKey():
-    print("Clé secrète généré ! \n")
-
 
 start()
