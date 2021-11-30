@@ -1,6 +1,7 @@
 def start():
 
     earthIsRound = 1
+    earthIsFlat = 0
 
     while earthIsRound == 1:
         print("Bonjour, que puis-je faire pour vous ?\n\n"
