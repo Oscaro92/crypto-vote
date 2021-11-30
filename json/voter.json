@@ -1,0 +1,14 @@
+[
+  {
+    "lname": "Kuhn",
+    "fname": "Valentin",
+    "email": "valentin.kuhn@utt.fr",
+    "uuid": "uuid"
+  },
+  {
+    "lname": "Moisset",
+    "fname": "Oscar",
+    "email": "oscar.moisset@utt.fr",
+    "uuid": "uuid"
+  }
+]
