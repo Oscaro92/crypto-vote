@@ -1,68 +1,135 @@
 import uuid
 
+
 ##--------------------------UTILISATEURS-----------------------------##
 class User:
-  def __init__(self, lname, fname, email):
-    self.lname = lname
-    self.fname = fname
-    self.email = email
+    def __init__(self, lname, fname, email):
+        self.lname = lname
+        self.fname = fname
+        self.email = email
 
-  def print(self):
-    print("Utilisateur:", self.fname, self.lname, self.email)
-##-------------------------------------------------------------------##
+    def to_print(self):
+        return str(self.fname) + str(self.lname) + str(self.email) + "\n"
+
+    # Permet l'itération de l'élément
+    def __iter__(self):
+      yield self
+
+
+##--------------------------ELECTEURS--------------------------------##
 class Voter(User):
-  def __init__(self, *args):
-    ### Création d'un électeur depuis un utilisateur
-    if type(args[0]) is User:
-      self.__dict__ = args[0].__dict__.copy()
-    else:
-      super(Voter, self).__init__(*args[:2])
-    self.uuid = uuid.uuid4()
+    def __init__(self, *args):
+        ### Création d'un électeur depuis un utilisateur
+        if type(args[0]) is User:
+            self.__dict__ = args[0].__dict__.copy()
+        else:
+            super(Voter, self).__init__(*args)
+        self.uuid = uuid.uuid4()
 
-  def from_user(self, user):
-    return self(user.lname, user.fname, user.email)
+    def to_print(self):
+        return str(self.fname) + " " + str(self.lname) + " " + str(self.email) + " " + str(self.uuid) + "\n"
 
-  def print(self):
-    print("Électeur:", self.fname, self.lname, self.email, self.uuid)
+    def __iter__(self):
+      yield self
+
+
 ##-------------------------------------------------------------------##
 class Admin(User):
-  def __init__(self, lname, fname, email):
-    User.__init__(self, lname, fname, email)
+    def __init__(self, *args):
+        if type(args[0]) is User:
+            self.__dict__ = args[0].__dict__.copy()
+        else:
+            super(Admin, self).__init__(*args)
 
-  def from_user(self, user):
-    return self(user.fname, user.lname, user.email)
+    def to_print(self):
+        return str(self.fname) + " " + str(self.lname) + " " + str(self.email) + "\n"
 
-  def print(self):
-    print("Administrateur:", self.fname, self.lname, self.email, self.uuid)
+    def __iter__(self):
+      yield self
+
+
 ##-------------------------------------------------------------------##
 class Authority(User):
-  def __init__(self, lname, fname, email):
-    User.__init__(self, lname, fname, email)
+    def __init__(self, *args):
+        if type(args[0]) is User:
+            self.__dict__ = args[0].__dict__.copy()
+        else:
+            super(Authority, self).__init__(*args)
 
-  def from_user(self, user):
-    return self(user.fname, user.lname, user.email)
+    def to_print(self):
+        return str(self.fname) + " " + str(self.lname) + " " + str(self.email) + "\n"
 
-  def print(self):
-    print("Autorité:", self.fname, self.lname, self.email, self.uuid)
+    def __iter__(self):
+      yield self
 
 ##--------------------------ELECTION---------------------------------##
+class Question:
+    class_counter = 1  # Compteur de questions
+
+    def __init__(self, title):
+        self.id = self.class_counter
+        self.class_counter += 1
+        self.title = title
+        self.answers = []
+
+    def add_answer(self, answer):
+        self.answers.append(answer)
+
+    def to_print(self):
+        to_print = "Question " + str(self.id) + ": " + str(self.title) + "\n\t\t"
+        i = 1
+        for a in self.answers:
+            to_print += str(i) + ": " + str(a) + "\n\t\t"
+            i += 1
+        return to_print
+
+    def __iter__(self):
+        yield self
+
+##-------------------------------------------------------------------##
 class Election:
-  class_counter = 0 #Compteur d'élection pour en gérer plusieurs
-  def __init__(self, questions, answers, authorities, voters):
-    self.id = self.class_counter
-    self.questions = questions
-    self.answers = answers
-    self.authorities = authorities
-    self.voters = voters
-    self.class_counter += 1
+    class_counter = 1  # Compteur d'élection pour en gérer plusieurs
+
+    def __init__(self, admin, questions, authorities, voters):
+        self.id = self.class_counter
+        self.admin = admin
+        self.questions = questions
+        self.authorities = authorities
+        self.voters = voters
+        self.class_counter += 1
+
+    def to_print_questions(self):
+        to_print = ""
+        for q in self.questions:
+            to_print += q.to_print()
+        return to_print + "\n"
+
+    def to_print_authorities(self):
+        to_print = ""
+        for a in self.authorities:
+          to_print += a.to_print()
+        return to_print + "\n"
+
+    def to_print_voters(self):
+        to_print = ""
+        for v in self.voters:
+          to_print += v.to_print()
+        return to_print + "\n"
+
+    def to_print(self):
+        return "Élection " + str(self.id) + "\nAdmin:\n\t" + self.admin.to_print() + "Question(s):\n\t" + self.to_print_questions() + "Dépouilleur(s):\n\t" + self.to_print_authorities() + "Électeurs:\n\t" + self.to_print_voters() + "\n"
 
 
-
-
-
-#TESTS
+# TESTS
 user = User("Moisset", "Oscar", "oscar.moisset@utt.fr")
-v2 = Voter(user)
+v = Voter(user)
+a = Admin(user)
+d = Authority("KUHN", "Valentin", "valentin.kuhn@utt.fr")
 
-user.print()
-v2.print()
+q = Question("Qui?")
+q.add_answer("Oui")
+q.add_answer("Non")
+
+e = Election(a, q, d, v)
+
+print(e.to_print())
