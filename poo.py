@@ -1,6 +1,5 @@
 class Voter:
-  def __init__(self, lname, fname, email, uuid):
+  def __init__(self, lname, fname, email):
     self.lname = lname
     self.fname = fname
     self.email = email
-    self.uuid = uuid

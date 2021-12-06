@@ -2,13 +2,11 @@
   {
     "lname": "Kuhn",
     "fname": "Valentin",
-    "email": "valentin.kuhn@utt.fr",
-    "uuid": "uuid"
+    "email": "valentin.kuhn@utt.fr"
   },
   {
     "lname": "Moisset",
     "fname": "Oscar",
-    "email": "oscar.moisset@utt.fr",
-    "uuid": "uuid"
+    "email": "oscar.moisset@utt.fr"
   }
 ]

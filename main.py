@@ -6,7 +6,6 @@ def start():
     # initialisation des variables :
     earthIsRound = 1
     earthIsFlat = 0
-    vote = []
 
     while earthIsRound == 1:
         time.sleep(2)
@@ -20,12 +19,11 @@ def start():
         choice = int(input("Votre choix : "))
 
         if choice == 1:
-            while earthIsRound == 1:
+            id = input("ID : ")
+            mdp = input('Mot de passe : ')
 
-                id = input("ID : ")
-                mdp = input('Mot de passe : ')
-
-                if id == "admin" and mdp == "admin":
+            if id == "admin" and mdp == "admin":
+                while earthIsRound == 1:
                     print("\nQue puis-je faire pour vous ?\n\n"
                           "1 - Créer un vote.\n"
                           "2 - Enregistrer un électeur.\n"
@@ -35,7 +33,7 @@ def start():
                     choice = int(input("Votre choix : "))
 
                     if choice == 1:
-                        addVote(vote)
+                        addVote()
                     elif choice == 2:
                         saveVoter()
                     elif choice == 3:
@@ -44,17 +42,23 @@ def start():
                         break
                     else:
                         print("Sais-tu lire et compter ? \n")
-                else:
-                    print("ID et/ou Mot de passe Incorrect")
-                    break
+            else:
+                print("ID et/ou Mot de passe Incorrect")
+                break
 
         elif choice == 2:
+            lname = input("Nom : ")
+            fname = input("Prénom : ")
             email = input("Mail : ")
-            uuid = input("uuid : ")
 
-            auth = voterExist(uuid, email, "./json/voter.json")
+            auth = voterExist(lname, fname, email, "./json/voter.json")
 
             if auth == 1:
+                idSession = generateUUID()
+
+                print("Votre ID de session : ", idSession)
+
+
                 while earthIsRound == 1:
 
                     print("\nQue puis-je faire pour vous ?\n\n"
@@ -82,6 +86,5 @@ def start():
             print("Sais-tu lire et compter ? \n")
 
     print("\nMerci d'avoir utilisé Votix !")
-
 
 start()
