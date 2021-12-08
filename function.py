@@ -1,9 +1,12 @@
-from json import *
+from functionJSON import *
 from poo import *
+import uuid
 
-def addVote(vote):
+def addVote():
+    vote = []
+
     quest = input("Quelle est votre question ? ")
-    nbAns = int(input("Nombre de réponses possible ? "))
+    nbAns = int(input("Nombre de réponse possible ? "))
 
     vote.append(quest)
 
@@ -12,7 +15,7 @@ def addVote(vote):
         ans = input(msg)
         vote.append(ans)
 
-    #save vote in jsons
+    #save vote in json
     data = {
         "Question": vote[0],
         "Response": vote[1:3]
@@ -26,7 +29,21 @@ def addVote(vote):
         print(vote[i])
     print("")
 
-def saveVoter(A, E, S):
+def saveVoter():
+    lname = input("Nom : ")
+    fname = input("Prénom : ")
+    email = input("Mail : ")
+
+    v = Voter(lname, fname, email)
+
+    data = {
+        "lname": v.lname,
+        "fname": v.fname,
+        "email": v.email
+    }
+
+    addVoter(data, "./json/voter.json")
+
     print("Electeur enregistré ! \n")
 
 def saveVote():
@@ -37,6 +54,11 @@ def checkVote():
 
 def counting():
     print("Dépouillement fait ! \n")
+
+def generateUUID():
+    idSession = str(uuid.uuid4())
+
+    return idSession
 
 def createSecretKey():
     print("Clé secrète généré ! \n")
