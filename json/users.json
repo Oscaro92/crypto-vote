@@ -1,0 +1,34 @@
+[
+  {
+    "lname": "Moisset",
+    "fname": "Oscar",
+    "mail": "oscar.moisset@utt.fr",
+    "voteAccess": [],
+    "voteAdmin": [],
+    "voteAuthorized": []
+  },
+  {
+    "lname": "Kuhn",
+    "fname": "Valentin",
+    "mail": "valentin.kuhn@utt.fr",
+    "voteAccess": [],
+    "voteAdmin": [],
+    "voteAuthorized": []
+  },
+  {
+    "lname": "Cogranne",
+    "fname": "Remi",
+    "mail": "remi.cogranne@utt.fr",
+    "voteAccess": [],
+    "voteAdmin": [],
+    "voteAuthorized": []
+  },
+  {
+    "lname": "Burger",
+    "fname": "Nicolas",
+    "mail": "nicolas.burger@utt.fr",
+    "voteAccess": [],
+    "voteAdmin": [],
+    "voteAuthorized": []
+  }
+]

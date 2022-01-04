@@ -7,83 +7,67 @@ def start():
     earthIsRound = 1
     earthIsFlat = 0
 
-    while earthIsRound == 1:
+    vote_counter = 0
+
+    while earthIsRound:
         time.sleep(2)
 
         print("\nBonjour et bienvenue sur votix ! \n"
-              "Etes-vous admin ou électeur ? \n\n"
-              "1 - Admin\n"
-              "2 - Electeur\n"
-              "3 - Quitter\n")
+              "Veuillez vous connecter \n\n")
 
-        choice = int(input("Votre choix : "))
+        lname = input('Nom: ')
+        fname = input('Prénom: ')
+        email = input('Adresse email: ')
 
-        if choice == 1:
-            id = input("ID : ")
-            mdp = input('Mot de passe : ')
+        userFound = userExist(lname, fname, email)
+        if userFound:
+            while earthIsRound:
+                print("\nQue puis-je faire pour vous ?\n\n"
+                      "1 - Créer un vote.\n"
+                      "2 - Enregistrer un électeur.\n"
+                      "3 - Enregistrer un vote.\n"
+                      "4 - Vérifier un vote.\n"
+                      "5 - Procéder au dépouillement.\n"
+                      "6 - Changer de compte\n")
 
-            if id == "admin" and mdp == "admin":
-                while earthIsRound == 1:
-                    print("\nQue puis-je faire pour vous ?\n\n"
-                          "1 - Créer un vote.\n"
-                          "2 - Enregistrer un électeur.\n"
-                          "3 - Procéder au dépouillement.\n"
-                          "4 - Retour\n")
+                choice = int(input("Votre choix : "))
 
-                    choice = int(input("Votre choix : "))
+                # CREATION DU VOTE
+                if choice == 1:
+                    vote_counter += 1
+                    createVote(vote_counter)
+                    addVoteAdmin(userFound, vote_counter)
 
-                    if choice == 1:
-                        addVote()
-                    elif choice == 2:
-                        saveVoter()
-                    elif choice == 3:
-                        counting()
-                    elif choice == 4:
+                # AJOUT D'ÉLECTEUR
+                elif choice == 2:
+                    voteAdmin = findVoteWhereAdmin(userFound)
+                    if voteAdmin == []:
+                        print("Vous n'êtes admin d'aucun vote.")
                         break
                     else:
-                        print("Sais-tu lire et compter ? \n")
-            else:
-                print("ID et/ou Mot de passe Incorrect")
-                break
-
-        elif choice == 2:
-            lname = input("Nom : ")
-            fname = input("Prénom : ")
-            email = input("Mail : ")
-
-            auth = voterExist(lname, fname, email, "./json/voter.json")
-
-            if auth == 1:
-                idSession = generateUUID()
-
-                print("Votre ID de session : ", idSession)
-
-
-                while earthIsRound == 1:
-
-                    print("\nQue puis-je faire pour vous ?\n\n"
-                          "1 - Enregistrer un vote.\n"
-                          "2 - Vérifier un vote.\n"
-                          "3 - Retour\n")
-
-                    choice = int(input("Votre choix : "))
-
-                    if choice == 1:
-                        saveVote()
-                    elif choice == 2:
-                        checkVote()
-                    elif choice == 3:
-                        break
-                    else:
-                        print("Sais-tu lire et compter ? \n")
-            else:
-                print("Mail et/ou UUID incorrect")
-
-
-        elif choice == 3:
-            break
+                        while earthIsRound:
+                            if choice == 0:
+                                break
+                            print("A quel vote souhaitez-vous ajouter un électeur? \n")
+                            for voteID in voteAdmin:
+                                voteQuestion = getVote(voteID)["Question"]
+                                print("{} - {}\n".format(voteID, voteQuestion))
+                            choice = int(input("Vote choisi (ID): "))
+                            if not voteExist(choice):
+                                print("Cet ID n'est pas bon. Réessayez ('0' pour stopper)")
+                            saveVoter(choice)
+    #TODO :
+                elif choice == 3:
+                    counting()
+                elif choice == 4:
+                    break
+                elif choice == 5:
+                    break
+                else:
+                    break
         else:
-            print("Sais-tu lire et compter ? \n")
+            print("ID et/ou Mot de passe Incorrect")
+            break
 
     print("\nMerci d'avoir utilisé Votix !")
 
