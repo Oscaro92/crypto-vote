@@ -1,6 +1,9 @@
 from functionJSON import *
 from poo import *
 import uuid
+import string
+import random
+from pbkdf2 import crypt
 
 def addVote():
     vote = []
@@ -60,8 +63,16 @@ def generateUUID():
 
     return idSession
 
-def createSecretKey():
-    print("Clé secrète généré ! \n")
+def generateC():
+    c = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(14))
+    return c
 
-def createPublicKey():
-    print("Clé publique généré ! \n")
+def createS(c):
+    s = crypt(c)
+
+    return s
+
+def createPub(s):
+    pub = s
+
+    return s
