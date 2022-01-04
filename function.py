@@ -1,9 +1,9 @@
 from functionJSON import *
-from poo import *
+from pbkdf2 import crypt
 import uuid
 import string
 import random
-from pbkdf2 import crypt
+import re
 
 def createVote(voteID):
     vote = []
@@ -107,12 +107,30 @@ def generateC():
     c = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(14))
     return c
 
-def createS(c):
-    s = crypt(c)
+def createS():
+    s = ''.join(random.choice(string.digits) for x in range(3))
 
-    return s
+    while generate(int(s), 15):
+        s = ''.join(random.choice(string.digits) for x in range(3))
 
-def createPub(s):
-    pub = s
+    return int(s)
 
-    return s
+def createPub(s, g):
+    pub = 0
+    cond = True
+
+    while cond == True:
+        pub = g ** s
+        if len(str(pub)) > 512 and len(str(pub)) < 1000 :
+            cond = False
+
+    return pub
+
+def generate(a, Z):
+    for i in range(1, Z):
+        b = (a**i)%Z
+        if b == 1:
+            if i == Z-1:
+                return True
+            else :
+                return False
