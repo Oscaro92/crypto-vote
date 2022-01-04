@@ -3,9 +3,8 @@ from pbkdf2 import crypt
 import uuid
 import string
 import random
-import re
 
-def createVote(voteID):
+def createVote(user, voteID):
     vote = []
 
     quest = input("Quelle est votre question ? ")
@@ -18,21 +17,22 @@ def createVote(voteID):
         ans = input(msg)
         vote.append(ans)
 
-    voters = readJSON("./json/voter.json")
     #save vote in json
     data = {
         "ID": voteID,
         "Question": vote[0],
         "Response": vote[1:3],
+        "Voters": [],
+        "Admins": [],
+        "Authorized": []
     }
-    writeJSON(data, "./json/vote.json")
+    AddVote(user, data)
 
     msg = 'Le vote {} "{}" est créé !\n'.format(voteID, quest)
     print(msg)
     print("Les réponses possibles sont : ")
-    for i in range(1, nbAns):
+    for i in range(1, nbAns+1):
         print(vote[i])
-    print("")
 
 def saveVoter(voteID):
     print("Renseignez les informations suivantes :\n")
@@ -40,23 +40,24 @@ def saveVoter(voteID):
     fname = input("Prénom: ")
     email = input("Email: ")
 
-    userFound = userExist(lname, fname, email)
+    userFound = getUser(lname, fname, email)
 
-    if userFound:
-        addVoteAccess(userFound, voteID) # AJOUT DU DROIT DE VOTE
+    if not userFound == []:
+        generateUUID(userFound, voteID) #GENERATION DE L'UUID UNIQUE AU VOTE
+        addVoter(userFound, voteID) # AJOUT DU DROIT DE VOTE
         print("\nCette personne sera-t-elle Admin ?\n\n"
               "1 - Oui.\n"
               "0 - Non.\n")
         choice = int(input("Votre choix : "))
         if choice:
-            addVoteAdmin(userFound, voteID) # AJOUT DES DROITS ADMINS
+            addAdmin(userFound, voteID) # AJOUT DES DROITS ADMINS
 
         print("\nCette personne sera-t-elle autorisée à dépouiller ?\n\n"
           "1 - Oui.\n"
           "0 - Non.\n")
         choice = int(input("Votre choix : ")) # AJOUT DES DROITS DEPOUILLEMENT
         if choice:
-            addVoteAuthorized(userFound, voteID)
+            addAuthorized(userFound, voteID)
 
     #Si on ne trouve pas l'utilisateur, on lui créé un compte
     else:
@@ -64,7 +65,7 @@ def saveVoter(voteID):
             "lname": lname,
             "fname": fname,
             "email": email,
-            "voteAccess": [voteID]
+            "uuids": []
         }
 
         print("\nCette personne sera-t-elle Admin ?\n\n"
@@ -85,7 +86,7 @@ def saveVoter(voteID):
         else:
             data["voteAuthorized"] = []
 
-        addUser(data, "./json/user.json")
+        addUser(data)
 
     print("Electeur enregistré ! \n")
 
@@ -97,11 +98,6 @@ def checkVote():
 
 def counting():
     print("Dépouillement fait ! \n")
-
-def generateUUID():
-    idSession = str(uuid.uuid4())
-
-    return idSession
 
 def generateC():
     c = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(14))

@@ -3,32 +3,29 @@
     "lname": "Moisset",
     "fname": "Oscar",
     "mail": "oscar.moisset@utt.fr",
-    "voteAccess": [],
-    "voteAdmin": [],
-    "voteAuthorized": []
+    "uuids": []
   },
   {
     "lname": "Kuhn",
     "fname": "Valentin",
     "mail": "valentin.kuhn@utt.fr",
-    "voteAccess": [],
-    "voteAdmin": [],
-    "voteAuthorized": []
+    "uuids": [
+      {
+        "voteID": 1,
+        "uuid": "a627ab41-74e2-4b5a-952e-5926ac193fd5"
+      }
+    ]
   },
   {
     "lname": "Cogranne",
     "fname": "Remi",
     "mail": "remi.cogranne@utt.fr",
-    "voteAccess": [],
-    "voteAdmin": [],
-    "voteAuthorized": []
+    "uuids": []
   },
   {
     "lname": "Burger",
     "fname": "Nicolas",
     "mail": "nicolas.burger@utt.fr",
-    "voteAccess": [],
-    "voteAdmin": [],
-    "voteAuthorized": []
+    "uuids": []
   }
 ]

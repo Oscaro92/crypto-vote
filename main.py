@@ -7,8 +7,6 @@ def start():
     earthIsRound = 1
     earthIsFlat = 0
 
-    vote_counter = 0
-
     while earthIsRound:
         time.sleep(2)
 
@@ -19,8 +17,8 @@ def start():
         fname = input('Prénom: ')
         email = input('Adresse email: ')
 
-        userFound = userExist(lname, fname, email)
-        if userFound:
+        userFound = getUser(lname, fname, email)
+        if not userFound == []:
             while earthIsRound:
                 print("\nQue puis-je faire pour vous ?\n\n"
                       "1 - Créer un vote.\n"
@@ -28,20 +26,22 @@ def start():
                       "3 - Enregistrer un vote.\n"
                       "4 - Vérifier un vote.\n"
                       "5 - Procéder au dépouillement.\n"
-                      "6 - Changer de compte\n")
+                      "6 - Changer de compte\n"
+                      "7 - Quitter\n")
 
                 choice = int(input("Votre choix : "))
 
                 # CREATION DU VOTE
                 if choice == 1:
-                    vote_counter += 1
-                    createVote(vote_counter)
-                    addVoteAdmin(userFound, vote_counter)
+                    freeID = getUnusedVoteID()
+                    createVote(userFound, freeID)
 
                 # AJOUT D'ÉLECTEUR
                 elif choice == 2:
-                    voteAdmin = findVoteWhereAdmin(userFound)
-                    if voteAdmin == []:
+                    votes = findVotesWhereAdmin(userFound)
+
+                    print(votes)
+                    if votes == []:
                         print("Vous n'êtes admin d'aucun vote.")
                         break
                     else:
@@ -49,9 +49,8 @@ def start():
                             if choice == 0:
                                 break
                             print("A quel vote souhaitez-vous ajouter un électeur? \n")
-                            for voteID in voteAdmin:
-                                voteQuestion = getVote(voteID)["Question"]
-                                print("{} - {}\n".format(voteID, voteQuestion))
+                            for vote in votes:
+                                print("{} - {}\n".format(vote["ID"], vote["Question"]))
                             choice = int(input("Vote choisi (ID): "))
                             if not voteExist(choice):
                                 print("Cet ID n'est pas bon. Réessayez ('0' pour stopper)")
@@ -63,11 +62,12 @@ def start():
                     break
                 elif choice == 5:
                     break
-                else:
+                elif choice == 6:
                     break
+                else:
+                    earthIsRound = 0
         else:
             print("ID et/ou Mot de passe Incorrect")
-            break
 
     print("\nMerci d'avoir utilisé Votix !")
 

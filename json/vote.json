@@ -1,8 +1,26 @@
-{
-  "ID" : 0,
-  "Question": "QUI",
-  "Response": [
-    "OUI",
-    "NON"
-  ]
-}
+[
+  {
+    "ID": 0,
+    "Question": "BASE",
+    "Response": [
+      "A",
+      "B"
+    ],
+    "Voters": [],
+    "Admins": [],
+    "Authorized": []
+  },
+  {
+    "ID": 1,
+    "Question": "meil",
+    "Response": [
+      "1",
+      "2"
+    ],
+    "Voters": [],
+    "Admins": [
+      "a627ab41-74e2-4b5a-952e-5926ac193fd5"
+    ],
+    "Authorized": []
+  }
+]
