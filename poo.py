@@ -7,13 +7,19 @@ class User:
         self.lname = lname
         self.fname = fname
         self.email = email
+        self.votes = []
+        self.secret = ""
+        self.vote_code = ""
+
+    def addVote(self, voteID):
+        self.votes.append(voteID)
 
     def to_print(self):
         return str(self.fname) + str(self.lname) + str(self.email) + "\n"
 
     # Permet l'itération de l'élément
     def __iter__(self):
-      yield self
+        return self
 
 
 ##--------------------------ELECTEURS--------------------------------##
@@ -30,7 +36,7 @@ class Voter(User):
         return str(self.fname) + " " + str(self.lname) + " " + str(self.email) + " " + str(self.uuid) + "\n"
 
     def __iter__(self):
-      yield self
+        return self
 
 
 ##-------------------------------------------------------------------##
@@ -40,12 +46,15 @@ class Admin(User):
             self.__dict__ = args[0].__dict__.copy()
         else:
             super(Admin, self).__init__(*args)
+        self.voteAdmin = []
+    def addVoteAdmin(self, voteID):
+        self.voteAdmin.append(voteID)
 
     def to_print(self):
         return str(self.fname) + " " + str(self.lname) + " " + str(self.email) + "\n"
 
     def __iter__(self):
-      yield self
+        return self
 
 
 ##-------------------------------------------------------------------##
@@ -60,7 +69,8 @@ class Authority(User):
         return str(self.fname) + " " + str(self.lname) + " " + str(self.email) + "\n"
 
     def __iter__(self):
-      yield self
+        yield self
+
 
 ##--------------------------ELECTION---------------------------------##
 class Question:
@@ -86,6 +96,7 @@ class Question:
     def __iter__(self):
         yield self
 
+
 ##-------------------------------------------------------------------##
 class Election:
     class_counter = 1  # Compteur d'élection pour en gérer plusieurs
@@ -96,6 +107,7 @@ class Election:
         self.questions = questions
         self.authorities = authorities
         self.voters = voters
+        self.vote_code = [];
         self.class_counter += 1
 
     def to_print_questions(self):
@@ -107,17 +119,27 @@ class Election:
     def to_print_authorities(self):
         to_print = ""
         for a in self.authorities:
-          to_print += a.to_print()
+            to_print += a.to_print()
         return to_print + "\n"
 
     def to_print_voters(self):
         to_print = ""
         for v in self.voters:
-          to_print += v.to_print()
+            to_print += v.to_print()
         return to_print + "\n"
 
     def to_print(self):
-        return "Élection " + str(self.id) + "\nAdmin:\n\t" + self.admin.to_print() + "Question(s):\n\t" + self.to_print_questions() + "Dépouilleur(s):\n\t" + self.to_print_authorities() + "Électeurs:\n\t" + self.to_print_voters() + "\n"
+        return "Élection " + str(
+            self.id) + "\nAdmin:\n\t" + self.admin.to_print() + "Question(s):\n\t" + self.to_print_questions() + "Dépouilleur(s):\n\t" + self.to_print_authorities() + "Électeurs:\n\t" + self.to_print_voters() + "\n"
+
+    def generate_secrets(self):
+        # Le serveur E génère, pour chaque utilisateur, des identifiants secrets cn et un code de vote Pub(cn).
+        # Le serveur E envoie à chacun des utilisateurs Vn son identifiant cn
+        # Le serveur E envoie la liste des codes de vote L = shuffle (Pub(c1), . . . Pub(cN )) au serveur A.
+        # Le serveur E peut supprimer la liste des identifiants secrets cn.
+        return 0
+
+
 
 
 # TESTS
