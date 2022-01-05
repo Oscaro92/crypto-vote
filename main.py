@@ -39,21 +39,23 @@ def start():
                 # AJOUT D'ÉLECTEUR
                 elif choice == 2:
                     votes = findVotesWhereAdmin(userFound)
-
-                    print(votes)
-                    if votes == []:
+                    if not len(votes):
                         print("Vous n'êtes admin d'aucun vote.")
                         break
                     else:
                         while earthIsRound:
-                            if choice == 0:
-                                break
                             print("A quel vote souhaitez-vous ajouter un électeur? \n")
                             for vote in votes:
                                 print("{} - {}\n".format(vote["ID"], vote["Question"]))
+                            print("0 - Annuler\n")
                             choice = int(input("Vote choisi (ID): "))
+
+                            if choice == 0:
+                                break
+
                             if not voteExist(choice):
-                                print("Cet ID n'est pas bon. Réessayez ('0' pour stopper)")
+                                print("Cet ID n'est pas bon. Réessayez\n")
+
                             saveVoter(choice)
     #TODO :
                 elif choice == 3:
