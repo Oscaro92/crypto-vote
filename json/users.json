@@ -9,12 +9,13 @@
         "uuid": "0c8cdd77-1f88-4cf3-81e7-2ed8512cbfa6"
       }
     ],
-    "CodesDeVote": [
+    "VoteCodes": [
       {
         "voteID": 1,
         "cDv": "HkVhC6wgn3QZqk"
       }
-    ]
+    ],
+    "Passwords": []
   },
   {
     "lname": "Kuhn",
@@ -26,10 +27,16 @@
         "uuid": "8b88d7f3-a689-4fc6-9686-642269b4733b"
       }
     ],
-    "CodesDeVote": [
+    "VoteCodes": [
       {
         "voteID": 1,
         "cDv": "PDDBkK3YBE6APr"
+      }
+    ],
+    "Passwords": [
+      {
+        "voteID": 1,
+        "mdp": "admin"
       }
     ]
   },
@@ -38,13 +45,15 @@
     "fname": "Remi",
     "mail": "remi.cogranne@utt.fr",
     "uuids": [],
-    "CodesDeVote": []
+    "VoteCodes": [],
+    "Passwords": []
   },
   {
     "lname": "Burger",
     "fname": "Nicolas",
     "mail": "nicolas.burger@utt.fr",
     "uuids": [],
-    "CodesDeVote": []
+    "VoteCodes": [],
+    "Passwords": []
   }
 ]

@@ -44,7 +44,6 @@ def createVote(user):
     for i in range(1, nbAns + 1):
         print(vote[i])
 
-
 def saveVoter(voteID):
     print("Renseignez les informations suivantes :\n")
     lname = input("Nom: ")
@@ -77,6 +76,10 @@ def saveVoter(voteID):
     cDv = generateC(uuid)
     addCDV(userFound, voteID, cDv)
 
+    # Génération de mote de passe
+    # mdp = generateMDP()
+    mdp = "admin"
+    addMDP(userFound, voteID, mdp)
     #Rafraichissement
     userFound = getUser(lname, fname, email)
     addVoter(userFound, voteID)
@@ -97,7 +100,35 @@ def saveVoter(voteID):
     print("Electeur enregistré ! \n")
 
 def saveVote(voteID):
-    cDv = input("Veuillez indiquer votre code de vote : ")
+    #PDDBkK3YBE6APr
+    cDv = input("Veuillez indiquer votre code de vote : \n")
+    while not verifyVoteCode(cDv, voteID):
+        print("Code incorrect.\n")
+        cDv = input("Veuillez indiquer votre code de vote [q] pour quitter: ")
+
+        if cDv == "q":
+            return
+
+    print("Authentification réussie. Procédez au vote. \n")
+    vote = getVote(voteID)
+    print("{} \n {}".format(vote["Question"], vote["Response"]))
+
+    idResponse = input("Renseignez votre réponse : ")
+    while idResponse < 0 and len(vote["Response"]) < idResponse:
+        print("Choix impossible.\n")
+        idResponse = input("Renseignez votre réponse [q] pour quitter : ")
+        if idResponse == "q":
+            return
+
+    #admin
+    mdp = input("Pour valider votre vote et déposer votre bulletin, renseignez votre mot de passe: ")
+    while not verifyPassword(mdp, voteID):
+        print("Ce mot de passe n'est pas valide. \n")
+        mdp = input("Renseignez votre mot de passe [q] pour quitter: ")
+
+        if mdp == "q":
+            return
+
     print("Vote enregistré ! \n")
 
 def checkVote():
