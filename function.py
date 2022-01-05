@@ -4,6 +4,7 @@ import uuid
 import string
 import random
 
+
 def createVote(user, voteID):
     vote = []
 
@@ -17,7 +18,7 @@ def createVote(user, voteID):
         ans = input(msg)
         vote.append(ans)
 
-    #save vote in json
+    # save vote in json
     data = {
         "ID": voteID,
         "Question": vote[0],
@@ -31,8 +32,9 @@ def createVote(user, voteID):
     msg = 'Le vote {} "{}" est créé !\n'.format(voteID, quest)
     print(msg)
     print("Les réponses possibles sont : ")
-    for i in range(1, nbAns+1):
+    for i in range(1, nbAns + 1):
         print(vote[i])
+
 
 def saveVoter(voteID):
     print("Renseignez les informations suivantes :\n")
@@ -54,10 +56,10 @@ def saveVoter(voteID):
         addUser(user)
         print("Compte créé")
 
-    #Génération de l'UUID pour le vote
+    # Génération de l'UUID pour le vote
     generateUUID(userFound, voteID)
 
-    #Rafraichissement
+    # Rafraichissement
     userFound = getUser(lname, fname, email)
     addVoter(userFound, voteID)
     print("\nCette personne sera-t-elle Admin ?\n\n"
@@ -76,18 +78,23 @@ def saveVoter(voteID):
 
     print("Electeur enregistré ! \n")
 
+
 def saveVote():
     print("Vote enregistré ! \n")
+
 
 def checkVote():
     print("Vote vérifié ! \n")
 
+
 def counting():
     print("Dépouillement fait ! \n")
+
 
 def generateC():
     c = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(14))
     return c
+
 
 def createS():
     s = ''.join(random.choice(string.digits) for x in range(3))
@@ -97,25 +104,38 @@ def createS():
 
     return int(s)
 
+
 def createPub(s, g):
     pub = 0
     cond = True
 
     while cond == True:
         pub = g ** s
-        if len(str(pub)) > 512 and len(str(pub)) < 1000 :
+        if len(str(pub)) > 512 and len(str(pub)) < 1000:
             cond = False
 
     return pub
 
+
 def generate(a, Z):
     for i in range(1, Z):
-        b = (a**i)%Z
+        b = (a ** i) % Z
         if b == 1:
-            if i == Z-1:
+            if i == Z - 1:
                 return True
-            else :
+            else:
                 return False
 
+
 def genereateAlpha():
-    print("Alpha ok !!")
+    r = ''.join(random.choice(string.digits) for x in range(3))
+
+    print(r)
+
+    g = 13
+
+    alpha = g ** int(r)
+
+    print(alpha)
+
+    print(len(str(alpha)))
