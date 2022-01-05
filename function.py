@@ -96,10 +96,10 @@ def generateC():
     return c
 
 
-def createS():
+def createS(g):
     s = ''.join(random.choice(string.digits) for x in range(3))
 
-    while generate(int(s), 13):
+    while generate(int(s), g):
         s = ''.join(random.choice(string.digits) for x in range(3))
 
     return int(s)
@@ -127,15 +127,23 @@ def generate(a, Z):
                 return False
 
 
-def genereateAlpha():
+def generateAlpha(g):
     r = ''.join(random.choice(string.digits) for x in range(3))
 
-    print(r)
-
-    g = 13
+    while generate(int(r), g):
+        r = ''.join(random.choice(string.digits) for x in range(3))
 
     alpha = g ** int(r)
 
-    print(alpha)
+    return alpha
 
-    print(len(str(alpha)))
+def generateA(g):
+
+    w = ''.join(random.choice(string.digits) for x in range(3))
+
+    while generate(int(w), g):
+        w = ''.join(random.choice(string.digits) for x in range(3))
+
+    A = g ** w
+
+    return A
