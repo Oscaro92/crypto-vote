@@ -3,7 +3,18 @@
     "lname": "Moisset",
     "fname": "Oscar",
     "mail": "oscar.moisset@utt.fr",
-    "uuids": []
+    "uuids": [
+      {
+        "voteID": 1,
+        "uuid": "0c8cdd77-1f88-4cf3-81e7-2ed8512cbfa6"
+      }
+    ],
+    "CodesDeVote": [
+      {
+        "voteID": 1,
+        "cDv": "HkVhC6wgn3QZqk"
+      }
+    ]
   },
   {
     "lname": "Kuhn",
@@ -12,7 +23,13 @@
     "uuids": [
       {
         "voteID": 1,
-        "uuid": "a627ab41-74e2-4b5a-952e-5926ac193fd5"
+        "uuid": "8b88d7f3-a689-4fc6-9686-642269b4733b"
+      }
+    ],
+    "CodesDeVote": [
+      {
+        "voteID": 1,
+        "cDv": "PDDBkK3YBE6APr"
       }
     ]
   },
@@ -20,12 +37,14 @@
     "lname": "Cogranne",
     "fname": "Remi",
     "mail": "remi.cogranne@utt.fr",
-    "uuids": []
+    "uuids": [],
+    "CodesDeVote": []
   },
   {
     "lname": "Burger",
     "fname": "Nicolas",
     "mail": "nicolas.burger@utt.fr",
-    "uuids": []
+    "uuids": [],
+    "CodesDeVote": []
   }
 ]
