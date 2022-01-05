@@ -1,8 +1,8 @@
 from functionJSON import *
-import uuid
-import random
-import string
 from pbkdf2 import crypt
+import uuid
+import string
+import random
 
 def createVote(user):
     vote = []
@@ -41,8 +41,9 @@ def createVote(user):
     msg = 'Le vote {} "{}" est créé !\n'.format(freeID, quest)
     print(msg)
     print("Les réponses possibles sont : ")
-    for i in range(1, nbAns+1):
+    for i in range(1, nbAns + 1):
         print(vote[i])
+
 
 def saveVoter(voteID):
     print("Renseignez les informations suivantes :\n")
@@ -76,10 +77,15 @@ def saveVoter(voteID):
     cDv = generateC(uuid)
     addCDV(userFound, voteID, cDv)
 
-    # Rafraichissement
+    #Rafraichissement
     userFound = getUser(lname, fname, email)
-
     addVoter(userFound, voteID)
+    print("\nCette personne sera-t-elle Admin ?\n\n"
+          "1 - Oui.\n"
+          "0 - Non.\n")
+    choice = int(input("Votre choix : "))  # AJOUT DES DROITS ADMINS
+    if choice:
+        addAdmin(userFound, voteID)
 
     print("\nCette personne sera-t-elle autorisée à dépouiller ?\n\n"
           "1 - Oui.\n"
@@ -108,10 +114,11 @@ def generateC(uuid):
     c = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(14))
     return c
 
-def createS():
+
+def createS(g):
     s = ''.join(random.choice(string.digits) for x in range(3))
 
-    while generate(int(s), 15):
+    while generate(int(s), g):
         s = ''.join(random.choice(string.digits) for x in range(3))
 
     return int(s)
@@ -135,3 +142,25 @@ def generate(a, Z):
                 return True
             else :
                 return False
+
+
+def generateAlpha(g):
+    r = ''.join(random.choice(string.digits) for x in range(3))
+
+    while generate(int(r), g):
+        r = ''.join(random.choice(string.digits) for x in range(3))
+
+    alpha = g ** int(r)
+
+    return alpha
+
+def generateA(g):
+
+    w = ''.join(random.choice(string.digits) for x in range(3))
+
+    while generate(int(w), g):
+        w = ''.join(random.choice(string.digits) for x in range(3))
+
+    A = g ** w
+
+    return A
