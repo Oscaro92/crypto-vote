@@ -42,51 +42,37 @@ def saveVoter(voteID):
 
     userFound = getUser(lname, fname, email)
 
-    if not userFound == []:
-        generateUUID(userFound, voteID) #GENERATION DE L'UUID UNIQUE AU VOTE
-        addVoter(userFound, voteID) # AJOUT DU DROIT DE VOTE
-        print("\nCette personne sera-t-elle Admin ?\n\n"
-              "1 - Oui.\n"
-              "0 - Non.\n")
-        choice = int(input("Votre choix : "))
-        if choice:
-            addAdmin(userFound, voteID) # AJOUT DES DROITS ADMINS
-
-        print("\nCette personne sera-t-elle autorisée à dépouiller ?\n\n"
-          "1 - Oui.\n"
-          "0 - Non.\n")
-        choice = int(input("Votre choix : ")) # AJOUT DES DROITS DEPOUILLEMENT
-        if choice:
-            addAuthorized(userFound, voteID)
-
-    #Si on ne trouve pas l'utilisateur, on lui créé un compte
-    else:
-        data = {
+    # Si on ne trouve pas l'utilisateur, on lui créé un compte
+    if not len(userFound):
+        user = {
             "lname": lname,
             "fname": fname,
-            "email": email,
+            "mail": email,
             "uuids": []
         }
 
-        print("\nCette personne sera-t-elle Admin ?\n\n"
-              "1 - Oui.\n"
-              "0 - Non.\n")
-        choice = int(input("Votre choix : ")) # AJOUT DES DROITS ADMINS
-        if choice:
-              data["voteAdmin"] = [voteID]
-        else:
-            data["voteAdmin"] = []
+        addUser(user)
+        print("Compte créé")
 
-        print("\nCette personne sera-t-elle autorisée à dépouiller ?\n\n"
-              "1 - Oui.\n"
-              "0 - Non.\n")
-        choice = int(input("Votre choix : "))  # AJOUT DES DROITS DEPOUILLEMENT
-        if choice:
-            data["voteAuthorized"] = [voteID]
-        else:
-            data["voteAuthorized"] = []
+    #Génération de l'UUID pour le vote
+    generateUUID(userFound, voteID)
 
-        addUser(data)
+    #Rafraichissement
+    userFound = getUser(lname, fname, email)
+    addVoter(userFound, voteID)
+    print("\nCette personne sera-t-elle Admin ?\n\n"
+          "1 - Oui.\n"
+          "0 - Non.\n")
+    choice = int(input("Votre choix : "))  # AJOUT DES DROITS ADMINS
+    if choice:
+        addAdmin(userFound, voteID)
+
+    print("\nCette personne sera-t-elle autorisée à dépouiller ?\n\n"
+          "1 - Oui.\n"
+          "0 - Non.\n")
+    choice = int(input("Votre choix : "))  # AJOUT DES DROITS DEPOUILLEMENT
+    if choice:
+        addAuthorized(userFound, voteID)
 
     print("Electeur enregistré ! \n")
 
