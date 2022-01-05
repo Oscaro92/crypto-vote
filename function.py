@@ -106,7 +106,7 @@ def generateC():
 def createS():
     s = ''.join(random.choice(string.digits) for x in range(3))
 
-    while generate(int(s), 15):
+    while generate(int(s), 13):
         s = ''.join(random.choice(string.digits) for x in range(3))
 
     return int(s)
@@ -131,3 +131,5 @@ def generate(a, Z):
             else :
                 return False
 
+def genereateAlpha():
+    print("Alpha ok !!")
