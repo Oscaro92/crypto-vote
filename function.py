@@ -1,6 +1,7 @@
 from functionJSON import *
 import string
 import random
+import hashlib
 
 def createVote(user):
     vote = []
@@ -136,6 +137,7 @@ def counting():
     print("Dépouillement fait ! \n")
 
 ###---------- CHIFFREMENT / SIGNATURES ----------###
+#pour tout le chiffrement nous allons prendre g = 2 et p = 2695139 ou 7919 pour que les calculs soit plus rapide
 def generateUUID():
     return str(uuid.uuid4())
 
@@ -144,10 +146,10 @@ def generateC(uuid):
     return c
 
 
-def createS(g):
+def createS(p):
     s = ''.join(random.choice(string.digits) for x in range(3))
 
-    while generate(int(s), g):
+    while generate(int(s), p):
         s = ''.join(random.choice(string.digits) for x in range(3))
 
     return int(s)
@@ -173,25 +175,66 @@ def generate(a, Z):
                 return False
 
 
-def generateAlpha(g):
+def cryptVote(msg, g, p):
     r = ''.join(random.choice(string.digits) for x in range(3))
 
-    while generate(int(r), g):
+    while generate(int(r), p):
         r = ''.join(random.choice(string.digits) for x in range(3))
 
     alpha = g ** int(r)
 
-    return alpha
+    m = ''.join(random.choice(string.digits) for x in range(3))
 
-def generateA(g, M):
+    while generate(int(m), p):
+        m = ''.join(random.choice(string.digits) for x in range(3))
+
+    beta = alpha ** int(r) * g ** int(m)
+
+    toEncrypted = "{}{}".format(msg, alpha)
+
+    encrypted_msg = hashlib.sha256(toEncrypted.encode())
+    encrypted_msg = encrypted_msg.hexdigest()
+
+    print(encrypted_msg)
+
+    return encrypted_msg
+
+def decryptVote(encrypt_msg, alpha, beta):
+
+
+    encrypted_msg = hashlib.sha256(encrypt_msg.encode())
+    encrypted_msg = encrypted_msg.hexdigest()
+
+    print(encrypted_msg)
+
+def generateSignature(g, M, c, p):
 
     w = ''.join(random.choice(string.digits) for x in range(3))
 
-    while generate(int(w), g):
+    while generate(int(w), p):
         w = ''.join(random.choice(string.digits) for x in range(3))
 
-    A = g ** w
+    S = "Votix"
+    A = g ** int(w)
 
-    #chal = h(A,M,S)
+    SMA = "{}{}{}".format(S, M, A)
 
-    return A
+    chal = hashlib.sha256(SMA.encode())
+    chal = chal.hexdigest()
+
+    resp = int(w) - int(c,36) * int(chal, 16) % p
+
+    print(resp)
+
+    #verifSignature(g, resp, int(chal, 16))
+
+    return chal
+
+def verifSignature(g, resp, chal):
+    print(resp, chal)
+    v = 3
+    A = g ** resp * v ** chal
+
+    print(A)
+
+    return
