@@ -1,0 +1,29 @@
+[
+  {
+    "ID": 0,
+    "Question": "BASE",
+    "Response": [
+      "A",
+      "B"
+    ],
+    "Voters": [],
+    "Admin": "",
+    "Authorized": []
+  },
+  {
+    "ID": 1,
+    "Question": "Qui est le meilleur?",
+    "Response": [
+      "Valentin",
+      "Oscar"
+    ],
+    "Voters": [
+      "PDDBkK3YBE6APr",
+      "HkVhC6wgn3QZqk"
+    ],
+    "Admin": "8b88d7f3-a689-4fc6-9686-642269b4733b",
+    "Authorized": [
+      "0c8cdd77-1f88-4cf3-81e7-2ed8512cbfa6"
+    ]
+  }
+]

@@ -26,24 +26,23 @@ def start():
                       "3 - Enregistrer un vote.\n"
                       "4 - Vérifier un vote.\n"
                       "5 - Procéder au dépouillement.\n"
-                      "6 - Changer de compte\n"
-                      "7 - Quitter\n")
+                      "6 - Annuler un vote.\n"
+                      "7 - Changer de compte\n"
+                      "8 - Quitter\n")
 
                 choice = int(input("Votre choix : "))
 
                 # CREATION DU VOTE
                 if choice == 1:
-                    freeID = getUnusedVoteID()
-                    createVote(userFound, freeID)
+                    createVote(userFound)
 
                 # AJOUT D'ÉLECTEUR
                 elif choice == 2:
                     votes = findVotesWhereAdmin(userFound)
                     if not len(votes):
                         print("Vous n'êtes admin d'aucun vote.")
-                        break
                     else:
-                        while earthIsRound:
+                        while True:
                             print("A quel vote souhaitez-vous ajouter un électeur? \n")
                             for vote in votes:
                                 print("{} - {}\n".format(vote["ID"], vote["Question"]))
@@ -53,18 +52,41 @@ def start():
                             if choice == 0:
                                 break
 
-                            if not voteExist(choice):
-                                print("Cet ID n'est pas bon. Réessayez\n")
-
-                            saveVoter(choice)
+                            if not getVote(choice):
+                                print("Choisissez un vote dans la liste (le numéro ;) )\n")
+                            else:
+                                saveVoter(choice)
+                                break
     #TODO :
+                # VOTER
                 elif choice == 3:
-                    counting()
+                    votes = findVotesWhereVoter(userFound)
+                    if votes == []:
+                        print("Vous ne pouvez participer à aucun vote.")
+                        break
+                    while True:
+                        print("Vous avez été convié à voter lors des élections suivantes : \n")
+                        for vote in votes:
+                            print("{} - {}\n".format(vote["ID"], vote["Question"]))
+                        print("0 - Annuler\n")
+                        choice = int(input("Pour quelle élection souhaitez-vous voter?: "))
+
+                        if choice == 0:
+                            break
+
+                        if not getVote(choice):
+                            print("Choisissez un vote dans la liste (le numéro ;) )\n")
+                        else:
+                            saveVote(choice)
+                            break
+
                 elif choice == 4:
-                    break
+                    checkVote()
                 elif choice == 5:
-                    break
+                    counting()
                 elif choice == 6:
+                    deleteAllVote()
+                elif choice == 7:
                     break
                 else:
                     earthIsRound = 0

@@ -2,8 +2,7 @@ from functionJSON import *
 import string
 import random
 
-
-def createVote(user, voteID):
+def createVote(user):
     vote = []
 
     quest = input("Quelle est votre question ? ")
@@ -16,23 +15,32 @@ def createVote(user, voteID):
         ans = input(msg)
         vote.append(ans)
 
-    # save vote in json
+    # Génération d'un ID de vote
+    freeID = getUnusedVoteID()
+
+    #Génération de l'UUID
+    uuid = generateUUID()
+    addUUID(user, freeID, uuid)
+
+    #Génération du code de vote
+    cDv = generateC(uuid)
+    addCDV(user, freeID, cDv)
+
     data = {
-        "ID": voteID,
+        "ID": freeID,
         "Question": vote[0],
         "Response": vote[1:3],
-        "Voters": [],
-        "Admins": [],
+        "Voters": [cDv],
+        "Admin": uuid,
         "Authorized": []
     }
-    AddVote(user, data)
+    addVote(data)
 
-    msg = 'Le vote {} "{}" est créé !\n'.format(voteID, quest)
+    msg = 'Le vote {} "{}" est créé !\n'.format(freeID, quest)
     print(msg)
     print("Les réponses possibles sont : ")
     for i in range(1, nbAns + 1):
         print(vote[i])
-
 
 def saveVoter(voteID):
     print("Renseignez les informations suivantes :\n")
@@ -48,16 +56,29 @@ def saveVoter(voteID):
             "lname": lname,
             "fname": fname,
             "mail": email,
-            "uuids": []
+            "uuids": [],
+            "CodesDeVote": []
         }
 
         addUser(user)
         print("Compte créé")
 
-    # Génération de l'UUID pour le vote
-    generateUUID(userFound, voteID)
-
     # Rafraichissement
+    userFound = getUser(lname, fname, email)
+
+    #Génération de l'UUID pour le vote
+    uuid = generateUUID()
+    addUUID(userFound, voteID, uuid)
+
+    # Génération du code de vote
+    cDv = generateC(uuid)
+    addCDV(userFound, voteID, cDv)
+
+    # Génération de mote de passe
+    # mdp = generateMDP()
+    mdp = "admin"
+    addMDP(userFound, voteID, mdp)
+    #Rafraichissement
     userFound = getUser(lname, fname, email)
     addVoter(userFound, voteID)
     print("\nCette personne sera-t-elle Admin ?\n\n"
@@ -76,20 +97,49 @@ def saveVoter(voteID):
 
     print("Electeur enregistré ! \n")
 
+def saveVote(voteID):
+    #PDDBkK3YBE6APr
+    cDv = input("Veuillez indiquer votre code de vote : \n")
+    while not verifyVoteCode(cDv, voteID):
+        print("Code incorrect.\n")
+        cDv = input("Veuillez indiquer votre code de vote [q] pour quitter: ")
 
-def saveVote():
+        if cDv == "q":
+            return
+
+    print("Authentification réussie. Procédez au vote. \n")
+    vote = getVote(voteID)
+    print("{} \n {}".format(vote["Question"], vote["Response"]))
+
+    idResponse = input("Renseignez votre réponse : ")
+    while idResponse < 0 and len(vote["Response"]) < idResponse:
+        print("Choix impossible.\n")
+        idResponse = input("Renseignez votre réponse [q] pour quitter : ")
+        if idResponse == "q":
+            return
+
+    #admin
+    mdp = input("Pour valider votre vote et déposer votre bulletin, renseignez votre mot de passe: ")
+    while not verifyPassword(mdp, voteID):
+        print("Ce mot de passe n'est pas valide. \n")
+        mdp = input("Renseignez votre mot de passe [q] pour quitter: ")
+
+        if mdp == "q":
+            return
+
     print("Vote enregistré ! \n")
-
 
 def checkVote():
     print("Vote vérifié ! \n")
 
-
 def counting():
     print("Dépouillement fait ! \n")
 
+###---------- CHIFFREMENT / SIGNATURES ----------###
+def generateUUID():
+    return str(uuid.uuid4())
 
-def generateC():
+def generateC(uuid):
     c = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(14))
     return c
 
@@ -102,26 +152,24 @@ def createS(g):
 
     return int(s)
 
-
 def createPub(s, g):
     pub = 0
     cond = True
 
     while cond == True:
         pub = g ** s
-        if len(str(pub)) > 512 and len(str(pub)) < 1000:
+        if len(str(pub)) > 512 and len(str(pub)) < 1000 :
             cond = False
 
     return pub
 
-
 def generate(a, Z):
     for i in range(1, Z):
-        b = (a ** i) % Z
+        b = (a**i)%Z
         if b == 1:
-            if i == Z - 1:
+            if i == Z-1:
                 return True
-            else:
+            else :
                 return False
 
 
