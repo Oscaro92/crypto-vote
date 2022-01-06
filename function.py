@@ -1,6 +1,4 @@
 from functionJSON import *
-from pbkdf2 import crypt
-import uuid
 import string
 import random
 
@@ -137,7 +135,7 @@ def generateAlpha(g):
 
     return alpha
 
-def generateA(g):
+def generateA(g, M):
 
     w = ''.join(random.choice(string.digits) for x in range(3))
 
@@ -145,5 +143,7 @@ def generateA(g):
         w = ''.join(random.choice(string.digits) for x in range(3))
 
     A = g ** w
+
+    #chal = h(A,M,S)
 
     return A
