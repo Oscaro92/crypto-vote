@@ -181,31 +181,55 @@ def cryptVote(msg, g, p):
     while generate(int(r), p):
         r = ''.join(random.choice(string.digits) for x in range(3))
 
-    alpha = g ** int(r)
-
     m = ''.join(random.choice(string.digits) for x in range(3))
 
     while generate(int(m), p):
         m = ''.join(random.choice(string.digits) for x in range(3))
 
-    beta = alpha ** int(r) * g ** int(m)
+    alpha = (g ** int(r)) % p
 
-    toEncrypted = "{}{}".format(msg, alpha)
+    beta = (alpha ** int(r) % p) * (g ** int(m) % p)
 
-    encrypted_msg = hashlib.sha256(toEncrypted.encode())
-    encrypted_msg = encrypted_msg.hexdigest()
+    gm = (g ** int(m) % p)
+
+    hash = hashlib.sha256()
+    hash.update(msg.encode())
+    hash.update(str(gm).encode())
+    iv = hash.hexdigest()
+
+    hash = hashlib.sha256()
+    hash.update(iv.encode())
+    hash.update(str(alpha).encode())
+    encrypted_msg = hash.hexdigest()
 
     print(encrypted_msg)
 
-    return encrypted_msg
+    decrypted_msg = decryptVote(encrypted_msg, alpha, beta)
+
+    print(decrypted_msg)
+
+    return
 
 def decryptVote(encrypt_msg, alpha, beta):
+    hash = hashlib.sha256()
+    hash.update(encrypt_msg.encode())
+    formule = beta/(alpha ** beta)
+    hash.update(str(formule).encode())
+    iv = hash.hexdigest()
 
+    hash = hashlib.sha256()
+    hash.update(iv.encode())
+    hash.update(str(alpha).encode())
+    decrypted_msg = hash.hexdigest()
 
-    encrypted_msg = hashlib.sha256(encrypt_msg.encode())
-    encrypted_msg = encrypted_msg.hexdigest()
+    return decrypted_msg
 
-    print(encrypted_msg)
+def hash(S, M, A):
+    hash = hashlib.sha256()
+    hash.update(S.encode())
+    hash.update(M.encode())
+    hash.update(A.encode())
+    return hash.hexdigest()
 
 def generateSignature(g, M, c, p):
 
@@ -217,10 +241,7 @@ def generateSignature(g, M, c, p):
     S = "Votix"
     A = g ** int(w)
 
-    SMA = "{}{}{}".format(S, M, A)
-
-    chal = hashlib.sha256(SMA.encode())
-    chal = chal.hexdigest()
+    chal = hash(S, M, str(A))
 
     resp = int(w) - int(c,36) * int(chal, 16) % p
 
