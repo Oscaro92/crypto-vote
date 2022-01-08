@@ -44,15 +44,17 @@ def start():
                     else:
                         while True:
                             print("A quel vote souhaitez-vous ajouter un électeur? \n")
+                            i = 1
                             for vote in votes:
-                                print("{} - {}\n".format(vote["ID"], vote["Question"]))
+                                print("{} - {}\n".format(i, vote["Question"]))
+                                i += i
                             print("0 - Annuler\n")
                             choice = int(input("Vote choisi (ID): "))
 
                             if choice == 0:
                                 break
 
-                            if not getVote(choice):
+                            if not getVote(votes[choice]["uuid"]):
                                 print("Choisissez un vote dans la liste (le numéro ;) )\n")
                             else:
                                 saveVoter(choice)

@@ -1,9 +1,4 @@
 import json
-import uuid
-import random
-import string
-from pbkdf2 import crypt
-
 
 ###---------- FONCTIONS JSON----------###
 
@@ -42,20 +37,12 @@ def getVote(voteID):
             return 0
         return matchVote
 
-def getUnusedVoteID():
-    with open("json/votes.json", "r") as votes:
-        dataVote = json.load(votes)
-        # On considère 10 votes en simultané.
-        scheme = range(1, 10)
-        UsedID = [vote["ID"] for vote in dataVote]
-        return next(id for id in scheme if id not in UsedID)
-
 def addVoter(user, voteID):
     with open("json/votes.json", "r") as votes:
         dataVote = json.load(votes)
 
         # Verification : L'utilisateur doit avoir un code de vote pour ce vote
-        cDv = getcDv(user, voteID)
+        cDv = getCredential(user, voteID)
         matchVote = next((vote for vote in dataVote if vote["ID"] == voteID), 0)
         matchVote["Voters"].append(cDv)
 
@@ -165,7 +152,6 @@ def addUser(user):
 def addUUID(user, voteID, uuid):
     with open("./json/users.json", "r") as users:
         data = json.load(users)
-
         match = next((person for person in data
                       if person["lname"].lower() == user["lname"].lower()
                       and person["fname"].lower() == user["fname"].lower()
@@ -204,7 +190,7 @@ def getUUID(user, voteID):
 
         return matchVote["uuid"]
 
-def addCDV(user, voteID, cDv):
+def addVoteCode(user, voteID, cDv):
     with open("./json/users.json", "r") as users:
         data = json.load(users)
 
@@ -215,15 +201,58 @@ def addCDV(user, voteID, cDv):
                      , 0)
 
         if not match:
-            print("Erreur lors de la génération du code de vote : l'utilisateur n'a pas de compte.")
+            print("Erreur lors de l'ajout du code de vote : l'utilisateur n'a pas de compte.")
             return
 
-        match["VoteCodes"].append({"voteID": voteID, "cDv": cDv})
+        match["Credentials"].append({"voteID": voteID, "voteCode": cDv})
 
     with open("./json/users.json", "w") as users:
         json.dump(data, users)
 
-def getcDv(user, voteID):
+def getVoteCode(user, voteID):
+    with open("./json/users.json", "r") as users:
+        data = json.load(users)
+
+        matchUser = next((person for person in data
+                          if person["lname"].lower() == user["lname"].lower()
+                          and person["fname"].lower() == user["fname"].lower()
+                          and person["mail"].lower() == user["mail"].lower())
+                         , 0)
+
+        if not matchUser:
+            print("Erreur lors de la récupération du credential : l'utilisateur n'a pas de compte.")
+            return
+
+        matchCode = next((credential for credential in matchUser["Credentials"]
+                          if credential["voteID"] == voteID)
+                         , 0)
+        if not matchUser:
+            print(
+                "Erreur lors de la récupération du credential : l'utilisateur n'a pas accès au vote {}.".format(voteID))
+            return
+
+        return matchCode["voteCode"]
+
+def addCredential(user, voteID, credential):
+    with open("./json/users.json", "r") as users:
+        data = json.load(users)
+
+        match = next((person for person in data
+                      if person["lname"].lower() == user["lname"].lower()
+                      and person["fname"].lower() == user["fname"].lower()
+                      and person["mail"].lower() == user["mail"].lower())
+                     , 0)
+
+        if not match:
+            print("Erreur lors de l'ajout du credential' : l'utilisateur n'a pas de compte.")
+            return
+
+        match["Credentials"].append({"voteID": voteID, "credential": credential})
+
+    with open("./json/users.json", "w") as users:
+        json.dump(data, users)
+
+def getCredential(user, voteID):
     with open("./json/users.json", "r") as users:
         data = json.load(users)
 
@@ -234,43 +263,43 @@ def getcDv(user, voteID):
                      , 0)
 
         if not matchUser:
-            print("Erreur lors de la récupération du code de vote : l'utilisateur n'a pas de compte.")
+            print("Erreur lors de la récupération du credential : l'utilisateur n'a pas de compte.")
             return
 
-        matchVote = next((cDv for cDv in matchUser["VoteCodes"]
-                          if cDv["voteID"] == voteID)
+        matchCode = next((credential for credential in matchUser["Credentials"]
+                          if credential["voteID"] == voteID)
                          ,0)
         if not matchUser:
-            print("Erreur lors de la récupération du code de vote : l'utilisateur n'a pas accès au vote {}.".format(voteID))
+            print("Erreur lors de la récupération du credential : l'utilisateur n'a pas accès au vote {}.".format(voteID))
             return
 
-        return matchVote["cDv"]
+        return matchCode["credential"]
 
-def addMDP(user, voteID, mdp):
-    with open("./json/users.json", "r") as users:
-        data = json.load(users)
-
-        match = next((person for person in data
-                      if person["lname"].lower() == user["lname"].lower()
-                      and person["fname"].lower() == user["fname"].lower()
-                      and person["mail"].lower() == user["mail"].lower())
-                     , 0)
-
-        if not match:
-            print("Erreur lors de la génération du mot de passe : l'utilisateur n'a pas de compte.")
-            return
-
-
-        match["Passwords"].append({"voteID": voteID, "mdp": mdp})
-
-def verifyPassword(mdp, voteID):
-    with open("json/users.json", "r") as users:
-        dataUser = json.load(users)
-
-        matchUser = next((user for user in dataUser
-                          for pw in user["Passwords"]
-                          if pw["voteID"] == voteID
-                          and pw["mdp"] == mdp), 0)
-        if not matchUser:
-            return 0
-        return 1
+# def addMDP(user, voteID, mdp):
+#     with open("./json/users.json", "r") as users:
+#         data = json.load(users)
+#
+#         match = next((person for person in data
+#                       if person["lname"].lower() == user["lname"].lower()
+#                       and person["fname"].lower() == user["fname"].lower()
+#                       and person["mail"].lower() == user["mail"].lower())
+#                      , 0)
+#
+#         if not match:
+#             print("Erreur lors de la génération du mot de passe : l'utilisateur n'a pas de compte.")
+#             return
+#
+#
+#         match["Passwords"].append({"voteID": voteID, "mdp": mdp})
+#
+# def verifyPassword(mdp, voteID):
+#     with open("json/users.json", "r") as users:
+#         dataUser = json.load(users)
+#
+#         matchUser = next((user for user in dataUser
+#                           for pw in user["Passwords"]
+#                           if pw["voteID"] == voteID
+#                           and pw["mdp"] == mdp), 0)
+#         if not matchUser:
+#             return 0
+#         return 1

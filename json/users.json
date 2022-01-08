@@ -3,19 +3,8 @@
     "lname": "Moisset",
     "fname": "Oscar",
     "mail": "oscar.moisset@utt.fr",
-    "uuids": [
-      {
-        "voteID": 1,
-        "uuid": "0c8cdd77-1f88-4cf3-81e7-2ed8512cbfa6"
-      }
-    ],
-    "VoteCodes": [
-      {
-        "voteID": 1,
-        "cDv": "HkVhC6wgn3QZqk"
-      }
-    ],
-    "Passwords": []
+    "uuids": [],
+    "Credentials": []
   },
   {
     "lname": "Kuhn",
@@ -23,20 +12,18 @@
     "mail": "valentin.kuhn@utt.fr",
     "uuids": [
       {
-        "voteID": 1,
-        "uuid": "8b88d7f3-a689-4fc6-9686-642269b4733b"
+        "voteID": "e4fac6f7-db99-40ce-be61-97266612e6a4",
+        "uuid": "5026d042-1799-4db7-b9d7-7bf2be1bcbb5"
       }
     ],
-    "VoteCodes": [
+    "Credentials": [
       {
-        "voteID": 1,
-        "cDv": "PDDBkK3YBE6APr"
-      }
-    ],
-    "Passwords": [
+        "voteID": "e4fac6f7-db99-40ce-be61-97266612e6a4",
+        "voteCode": 393
+      },
       {
-        "voteID": 1,
-        "mdp": "admin"
+        "voteID": "e4fac6f7-db99-40ce-be61-97266612e6a4",
+        "credential": "UeT1ZRnrVhT4fBC"
       }
     ]
   },
@@ -45,15 +32,13 @@
     "fname": "Remi",
     "mail": "remi.cogranne@utt.fr",
     "uuids": [],
-    "VoteCodes": [],
-    "Passwords": []
+    "Credentials": []
   },
   {
     "lname": "Burger",
     "fname": "Nicolas",
     "mail": "nicolas.burger@utt.fr",
     "uuids": [],
-    "VoteCodes": [],
-    "Passwords": []
+    "Credentials": []
   }
 ]
