@@ -174,6 +174,17 @@ def generate(a, Z):
             else :
                 return False
 
+def power(a, b, c):
+    x = 1
+    y = a
+
+    while b > 0:
+        if b % 2 != 0:
+            x = (x * y) % c;
+        y = (y * y) % c
+        b = int(b / 2)
+
+    return x % c
 
 def cryptVote(msg, g, p):
     r = ''.join(random.choice(string.digits) for x in range(3))
