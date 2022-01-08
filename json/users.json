@@ -12,15 +12,18 @@
     "mail": "valentin.kuhn@utt.fr",
     "uuids": [
       {
-        "voteID": "0f760d18-3ffa-450b-8b3d-8513b4346353",
-        "uuid": "44f310b7-36e4-4521-aad8-40eef4c57954"
+        "voteID": "e4fac6f7-db99-40ce-be61-97266612e6a4",
+        "uuid": "5026d042-1799-4db7-b9d7-7bf2be1bcbb5"
       }
     ],
     "Credentials": [
       {
-        "voteID": "0f760d18-3ffa-450b-8b3d-8513b4346353",
-        "credential": "wTa6NNTPrN9wsA6",
-        "voteCode": 61
+        "voteID": "e4fac6f7-db99-40ce-be61-97266612e6a4",
+        "voteCode": 393
+      },
+      {
+        "voteID": "e4fac6f7-db99-40ce-be61-97266612e6a4",
+        "credential": "UeT1ZRnrVhT4fBC"
       }
     ]
   },
