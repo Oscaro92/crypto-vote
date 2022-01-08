@@ -1,6 +1,6 @@
+from functionJSON import *
 import pbkdf2
 import uuid
-from functionJSON import *
 import string
 import random
 import hashlib
@@ -35,6 +35,14 @@ def miller_rabin(n, k):
             return False
     return True
 
+def generate(a, Z):
+    for i in range(1, Z):
+        b = (a**i)%Z
+        if b == 1:
+            if i == Z-1:
+                return True
+            else :
+                return False
 
 def fast_exponentiation(a, e, modulo):
     result = 1
@@ -194,7 +202,7 @@ def saveVoter(voteID):
     credential = generateC()
     print("Identifiant secret de l'électeur (privé): {}".format(credential))  # Clé privée
     cDv = generatePublicKey(voteID)
-    addVoteCode(user, uuidVote, cDv)
+    addVoteCode(user, voteID, cDv)
     print("Votre code de vote de l'électeur (public): {}".format(cDv))  # Clé publique
     addCredential(user, voteID, credential)
 
@@ -337,91 +345,93 @@ def generateUUID():
 
 
 def cryptVote(msg, g, p):
-    r = ''.join(random.choice(string.digits) for x in range(3))
+    r = int(''.join(random.choice(string.digits) for x in range(3)))
 
-    while generate(int(r), p):
-        r = ''.join(random.choice(string.digits) for x in range(3))
+    while generate(r, p):
+        r = int(''.join(random.choice(string.digits) for x in range(3)))
 
-    m = ''.join(random.choice(string.digits) for x in range(3))
+    m = int(''.join(random.choice(string.digits) for x in range(3)))
 
-    while generate(int(m), p):
-        m = ''.join(random.choice(string.digits) for x in range(3))
+    while generate(r, p):
+        m = int(''.join(random.choice(string.digits) for x in range(3)))
 
-    alpha = (g ** int(r)) % p
+    alpha = fast_exponentiation(g, r, p)
+    alphaPrim = fast_exponentiation(alpha ,m ,p)
+    beta = fast_exponentiation(g, m, p)
 
-    beta = (alpha ** int(r) % p) * (g ** int(m) % p)
+    encrypted_msg = []
 
-    gm = (g ** int(m) % p)
+    for i in range(0, len(msg)):
+        encrypted_msg.append(msg[i])
 
-    hash = hashlib.sha256()
-    hash.update(msg.encode())
-    hash.update(str(gm).encode())
-    iv = hash.hexdigest()
+    print("Message à chiffrer : ", msg)
+    print(alpha)
+    print(beta)
+    print(alphaPrim)
 
-    hash = hashlib.sha256()
-    hash.update(iv.encode())
-    hash.update(str(alpha).encode())
-    encrypted_msg = hash.hexdigest()
+    for i in range(0, len(encrypted_msg)):
+        encrypted_msg[i] = alphaPrim * ord(encrypted_msg[i])
 
-    print(encrypted_msg)
+    decrypted_msg = decryptVote(encrypted_msg, beta, r, p)
+    decrypted_msg = ''.join(decrypted_msg)
 
-    decrypted_msg = decryptVote(encrypted_msg, alpha, beta)
-
-    print(decrypted_msg)
+    print("Message déchiffré : ", decrypted_msg)
 
     return
 
 
-def decryptVote(encrypt_msg, alpha, beta):
-    hash = hashlib.sha256()
-    hash.update(encrypt_msg.encode())
-    formule = beta/(alpha ** beta)
-    hash.update(str(formule).encode())
-    iv = hash.hexdigest()
+def decryptVote(encrypt_msg, beta, r, p):
+    decrypted_msg = []
 
-    hash = hashlib.sha256()
-    hash.update(iv.encode())
-    hash.update(str(alpha).encode())
-    decrypted_msg = hash.hexdigest()
+    betaPrim = fast_exponentiation(beta, r, p)
+
+    for i in range(0, len(encrypt_msg)):
+        decrypted_msg.append(chr(int(encrypt_msg[i] / betaPrim)))
 
     return decrypted_msg
 
 
 #-----------------Partie signature-----------------#
 
-def hash(S, M, A):
-    hash = hashlib.sha256()
-    hash.update(S.encode())
-    hash.update(M.encode())
-    hash.update(A.encode())
-    return hash.hexdigest()
+def generateSignature(g, p, c):
+    w = int(''.join(random.choice(string.digits) for x in range(3)))
+
+    while generate(w, p):
+        w = int(''.join(random.choice(string.digits) for x in range(3)))
+
+    A = fast_exponentiation(g, w, p)
+
+    y = int(''.join(random.choice(string.digits) for x in range(3)))
+
+    while generate(y, p):
+        y = int(''.join(random.choice(string.digits) for x in range(3)))
+
+    Y = fast_exponentiation(g, y, p)
+
+    #resp = w + int(c, 36) * A % p
+    resp = (y + int(c, 36) * w)
+
+    print(int(c, 36))
+
+    verifSignature(g, p, resp, int(c, 36), A, Y)
+
+    return resp
+
+# y = random.randint(1, 97)
+# Y = pow(generator, y) % PRIMENO
+#
+# c = random.randint(1, 97)
+#
+# z = (y + c * secretVal)
 
 
-def generateSignature(g, M, c, p):
-    w = ''.join(random.choice(string.digits) for x in range(3))
+def verifSignature(g, p, resp, c, A, Y):
+    val1 = pow(g, resp) % p
+    val2 = (Y * (A ** c)) % p
 
-    while generate(int(w), p):
-        w = ''.join(random.choice(string.digits) for x in range(3))
-
-    S = "Votix"
-    A = g ** int(w)
-
-    chal = hash(S, M, str(A))
-
-    resp = int(w) - int(c, 36) * int(chal, 16) % p
-
-    print(resp)
-
-    # verifSignature(g, resp, int(chal, 16))
-
-    return chal
-
-
-def verifSignature(g, resp, chal):
-    print(resp, chal)
-    v = 3
-    A = g ** resp * v ** chal
-
-    print(A)
+    if (val1 == val2):
+        print("ok")
+    else:
+        print("nope")
 
     return
