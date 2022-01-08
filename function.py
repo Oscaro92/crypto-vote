@@ -235,6 +235,9 @@ def decryptVote(encrypt_msg, alpha, beta):
 
     return decrypted_msg
 
+
+#-----------------Partie signature-----------------#
+
 def hash(S, M, A):
     hash = hashlib.sha256()
     hash.update(S.encode())
