@@ -1,8 +1,122 @@
+import pbkdf2
+import uuid
 from functionJSON import *
 import string
 import random
 import hashlib
+import struct
 
+
+# ---------- INITIALISATION ----------#
+def miller_rabin(n, k):
+    if n == 1:
+        return False
+
+    if n == 2:
+        return True
+
+    if n % 2 == 0:
+        return False
+
+    r, s = 0, n - 1
+    while s % 2 == 0:
+        r += 1
+        s //= 2
+    for _ in range(k):
+        a = random.randrange(2, n - 1)
+        x = pow(a, s, n)
+        if x == 1 or x == n - 1:
+            continue
+        for _ in range(r - 1):
+            x = pow(x, 2, n)
+            if x == n - 1:
+                break
+        else:
+            return False
+    return True
+
+
+def fast_exponentiation(a, e, modulo):
+    result = 1
+    while e > 0:
+        if (e % 2) == 1:
+            result = (result * a) % modulo
+        e = e // 2  # Division entiere
+        a = (a * a) % modulo
+    return result
+
+
+def GetPgenerators(P):
+    s = set(range(1, P))
+    results = []
+    for a in s:
+        g = set()
+        for x in s:
+            g.add(fast_exponentiation(a, x, P))
+        if g == s:
+            results.append(a)
+            ###############################
+            if len(results) == 2:  # On prend le deuxième générateur par simplicité d'exécution
+                return results  # A supprimer pour exécution réelle
+            ###############################
+    return results
+
+
+def euclide_inverse_modulaire(a, m):
+    modulo = m
+    k = 0
+
+    x = 1  # x0
+    y = 0  # x1
+
+    u = 0  # y0
+    v = 1  # y1
+
+    while m != 0:
+        q = a // m  # 0
+        r = a % m  # 23
+        xx = q * y + x  # 1
+
+        yy = q * v + u  # 0
+
+        a = m  # 13 devient 7
+        m = r  # 7 devient 6
+
+        x = y  # x0 prend la valeur x1
+        y = xx  # x1 prend la valeur x2 -- ici la nouvelle valeur
+        u = v  # y0 prend la valeur y1
+        v = yy  # y1 prend la valeur y2 -- ici la nouvelle valeur
+
+        k += 1
+    return ((-1) ** k) * x
+
+
+def pgcd(a, b):
+    if b == 0:
+        return a
+    else:
+        r = a % b
+        return pgcd(b, r)
+
+
+# P = random.getrandbits(512) #Récupération d'un entier 512-bits
+# while not miller_rabin(P, 25):  #Rabin Miller avec k=25 (erreur 2^-50)
+#    P = random.getrandbits(512)  # Récupération d'un entier 512-bits
+
+# la variable P sera notre premier utilisé tout au long du script
+# Ici, on prendra P = 10bits car la mémoire ne permet pas de calculer avec P 512bits
+# On récupère un générateur aléatoire de P
+
+P = random.getrandbits(10) #Doit être différent de 1 !
+while not miller_rabin(P, 25):
+    P = random.getrandbits(10)
+
+allG = GetPgenerators(P)
+## g = random.choice(allG) # Pour Exécution réelle
+g = allG[1]  # On prend le deuxième générateur par simplicité d'exécution
+
+
+# ---------- FONCTIONS ----------#
 def createVote(user):
     vote = []
 
@@ -17,31 +131,36 @@ def createVote(user):
         vote.append(ans)
 
     # Génération d'un ID de vote
-    freeID = getUnusedVoteID()
+    uuidVote = generateUUID()
 
-    #Génération de l'UUID
-    uuid = generateUUID()
-    addUUID(user, freeID, uuid)
+    # Génération de l'UUID de l'utilisateur
+    uuidUser = generateUUID()
+    addUUID(user, uuidVote, uuidUser)
 
-    #Génération du code de vote
-    cDv = generateC(uuid)
-    addCDV(user, freeID, cDv)
+    # Génération du code de vote
+    credential = generateC()
+    print("Identifiant secret de l'électeur (privé): {}".format(credential))  # Clé privée
+    cDv = generatePublicKey(uuidVote)
+    addVoteCode(user, uuidVote, cDv)
+    print("Votre code de vote de l'électeur (public): {}".format(cDv))  # Clé publique
+    addCredential(user, uuidVote, credential)
 
     data = {
-        "ID": freeID,
+        "ID": uuidVote,
         "Question": vote[0],
         "Response": vote[1:3],
         "Voters": [cDv],
-        "Admin": uuid,
+        "Admin": uuidUser,
         "Authorized": []
     }
     addVote(data)
 
-    msg = 'Le vote {} "{}" est créé !\n'.format(freeID, quest)
+    msg = 'Le vote "{}" est créé !\n'.format(quest)
     print(msg)
     print("Les réponses possibles sont : ")
     for i in range(1, nbAns + 1):
         print(vote[i])
+
 
 def saveVoter(voteID):
     print("Renseignez les informations suivantes :\n")
@@ -58,7 +177,7 @@ def saveVoter(voteID):
             "fname": fname,
             "mail": email,
             "uuids": [],
-            "CodesDeVote": []
+            "Credentials": []
         }
 
         addUser(user)
@@ -67,39 +186,34 @@ def saveVoter(voteID):
     # Rafraichissement
     userFound = getUser(lname, fname, email)
 
-    #Génération de l'UUID pour le vote
+    # Génération de l'UUID pour le vote
     uuid = generateUUID()
     addUUID(userFound, voteID, uuid)
 
     # Génération du code de vote
-    cDv = generateC(uuid)
-    addCDV(userFound, voteID, cDv)
+    credential = generateC()
+    print("Identifiant secret de l'électeur (privé): {}".format(credential))  # Clé privée
+    cDv = generatePublicKey(voteID)
+    addVoteCode(user, uuidVote, cDv)
+    print("Votre code de vote de l'électeur (public): {}".format(cDv))  # Clé publique
+    addCredential(user, voteID, credential)
 
-    # Génération de mote de passe
-    # mdp = generateMDP()
-    mdp = "admin"
-    addMDP(userFound, voteID, mdp)
-    #Rafraichissement
+    # Rafraichissement
     userFound = getUser(lname, fname, email)
     addVoter(userFound, voteID)
-    print("\nCette personne sera-t-elle Admin ?\n\n"
-          "1 - Oui.\n"
-          "0 - Non.\n")
-    choice = int(input("Votre choix : "))  # AJOUT DES DROITS ADMINS
-    if choice:
-        addAdmin(userFound, voteID)
 
-    print("\nCette personne sera-t-elle autorisée à dépouiller ?\n\n"
-          "1 - Oui.\n"
-          "0 - Non.\n")
-    choice = int(input("Votre choix : "))  # AJOUT DES DROITS DEPOUILLEMENT
-    if choice:
-        addAuthorized(userFound, voteID)
+    # print("\nCette personne sera-t-elle autorisée à dépouiller ?\n\n"
+    #       "1 - Oui.\n"
+    #       "0 - Non.\n")
+    # choice = int(input("Votre choix : "))  # AJOUT DES DROITS DEPOUILLEMENT
+    # if choice:
+    #     addAuthorized(userFound, voteID)
 
     print("Electeur enregistré ! \n")
 
+
 def saveVote(voteID):
-    #PDDBkK3YBE6APr
+    # PDDBkK3YBE6APr
     cDv = input("Veuillez indiquer votre code de vote : \n")
     while not verifyVoteCode(cDv, voteID):
         print("Code incorrect.\n")
@@ -119,72 +233,108 @@ def saveVote(voteID):
         if idResponse == "q":
             return
 
-    #admin
-    mdp = input("Pour valider votre vote et déposer votre bulletin, renseignez votre mot de passe: ")
-    while not verifyPassword(mdp, voteID):
-        print("Ce mot de passe n'est pas valide. \n")
-        mdp = input("Renseignez votre mot de passe [q] pour quitter: ")
-
-        if mdp == "q":
-            return
+    # #admin
+    # mdp = input("Pour valider votre vote et déposer votre bulletin, renseignez votre mot de passe: ")
+    # while not verifyPassword(mdp, voteID):
+    #     print("Ce mot de passe n'est pas valide. \n")
+    #     mdp = input("Renseignez votre mot de passe [q] pour quitter: ")
+    #
+    #     if mdp == "q":
+    #         return
 
     print("Vote enregistré ! \n")
+
 
 def checkVote():
     print("Vote vérifié ! \n")
 
+
 def counting():
     print("Dépouillement fait ! \n")
 
+
 ###---------- CHIFFREMENT / SIGNATURES ----------###
-#pour tout le chiffrement nous allons prendre g = 2 et p = 2695139 ou 7919 pour que les calculs soit plus rapide
+def RSA():
+    while not miller_rabin(P, 25):  # Génération d'un autre premier de 10 bits
+        Q = random.getrandbits(10)
+
+    n = P * Q
+    phi = (P - 1) * (Q - 1)
+    e = random.getrandbits(10)
+    while not (pgcd(e, P - 1) == 1) and not (pgcd(e, Q - 1) == 1):
+        e = random.getrandbits(10)
+
+    d = euclide_inverse_modulaire(e, phi)
+    return (n, e), d
+
+
+def tobase58(car):
+    alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+    return alphabet.index(car)
+
+
+def frombase58(i):
+    alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+    return alphabet[i]
+
+
+def checksum(c):
+    BigEndian = StringToBigEndian(c)
+    checksum = 53 - (BigEndianToInteger(BigEndian) % 53)
+    return frombase58(checksum)
+
+
+def StringToBigEndian(credential):  # 14 char long
+    base58 = [tobase58(car) for car in credential]  # Interpretation de c en base 58
+    BigEndian = struct.pack('>14B', base58[0], base58[1], base58[2], base58[3], base58[4], base58[5], base58[6],
+                            base58[7],
+                            base58[8], base58[9], base58[10], base58[11], base58[12], base58[13])
+    return BigEndian
+
+
+def CredentialToBigEndian(credential):  # 15 char long
+    base58 = [tobase58(car) for car in credential]  # Interpretation de c en base 58
+    BigEndian = struct.pack('>15B', base58[0], base58[1], base58[2], base58[3], base58[4], base58[5], base58[6],
+                            base58[7],
+                            base58[8], base58[9], base58[10], base58[11], base58[12], base58[13], base58[14])
+    return BigEndian
+
+
+def BigEndianToInteger(BigEndian):
+    return int.from_bytes(BigEndian, byteorder='big')
+
+
+# c = 14 char in 123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz
+def generateC():
+    set = (string.ascii_letters).translate({
+        ord('I'): None,
+        ord('O'): None,
+        ord('l'): None
+    }) + (string.digits).translate({
+        ord('0'): None
+    })
+
+    Fourteen = ''.join([random.choice(set) for x in range(14)])
+    credential = Fourteen + checksum(Fourteen)
+    # block = CredentialToBigEndian(credential)
+    return credential
+
+
+def secret(credential, uuid):
+    exponent = pbkdf2.crypt(credential, uuid.replace("-", ''), 1000)
+    secretExponent = BigEndianToInteger(exponent.encode("UTF-8"))
+    return secretExponent % (P - 1)  # valeur q = P-1 (ordre du générateur g de P)
+
+
+def generatePublicKey(uuid):
+    credential = generateC()
+    s = secret(credential, uuid.replace("-", ''))
+    return fast_exponentiation(g, s, P)
+
+
 def generateUUID():
     return str(uuid.uuid4())
 
-def generateC(uuid):
-    c = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(14))
-    return c
-
-
-def createS(p):
-    s = ''.join(random.choice(string.digits) for x in range(3))
-
-    while generate(int(s), p):
-        s = ''.join(random.choice(string.digits) for x in range(3))
-
-    return int(s)
-
-def createPub(s, g):
-    pub = 0
-    cond = True
-
-    while cond == True:
-        pub = g ** s
-        if len(str(pub)) > 512 and len(str(pub)) < 1000 :
-            cond = False
-
-    return pub
-
-def generate(a, Z):
-    for i in range(1, Z):
-        b = (a**i)%Z
-        if b == 1:
-            if i == Z-1:
-                return True
-            else :
-                return False
-
-def power(a, b, c):
-    x = 1
-    y = a
-
-    while b > 0:
-        if b % 2 != 0:
-            x = (x * y) % c;
-        y = (y * y) % c
-        b = int(b / 2)
-
-    return x % c
 
 def cryptVote(msg, g, p):
     r = ''.join(random.choice(string.digits) for x in range(3))
@@ -221,6 +371,7 @@ def cryptVote(msg, g, p):
 
     return
 
+
 def decryptVote(encrypt_msg, alpha, beta):
     hash = hashlib.sha256()
     hash.update(encrypt_msg.encode())
@@ -242,8 +393,8 @@ def hash(S, M, A):
     hash.update(A.encode())
     return hash.hexdigest()
 
-def generateSignature(g, M, c, p):
 
+def generateSignature(g, M, c, p):
     w = ''.join(random.choice(string.digits) for x in range(3))
 
     while generate(int(w), p):
@@ -254,13 +405,14 @@ def generateSignature(g, M, c, p):
 
     chal = hash(S, M, str(A))
 
-    resp = int(w) - int(c,36) * int(chal, 16) % p
+    resp = int(w) - int(c, 36) * int(chal, 16) % p
 
     print(resp)
 
-    #verifSignature(g, resp, int(chal, 16))
+    # verifSignature(g, resp, int(chal, 16))
 
     return chal
+
 
 def verifSignature(g, resp, chal):
     print(resp, chal)
