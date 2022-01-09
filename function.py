@@ -13,10 +13,10 @@ import collections
 # Nécessaire car la clé publique change en fonction de l'instance du programme.
 def init():
     users = getAllUsers()
+    emptyVoteVoteCodes()
     for user in users:
         votes = findVotesWhereVoter(user)
         for vote in votes:
-            emptyVoteVoteCodes(vote["ID"])
             credential = getCredential(user, vote["ID"])
             newVoteCode = generatePublicKey(credential, vote["ID"])
             setUserVoteCode(user, vote["ID"], newVoteCode)
@@ -68,14 +68,16 @@ def miller_rabin(n, k):
             return False
     return True
 
+
 def generate(a, Z):
     for i in range(1, Z):
-        b = (a**i)%Z
+        b = (a ** i) % Z
         if b == 1:
-            if i == Z-1:
+            if i == Z - 1:
                 return True
-            else :
+            else:
                 return False
+
 
 def fast_exponentiation(a, e, modulo):
     result = 1
@@ -174,26 +176,110 @@ def createVote(user):
     # Génération d'un ID de vote
     uuidVote = generateUUID()
 
-    # Génération de l'UUID de l'utilisateur
+    # Génération de l'UUID de l'administrateur
     uuidUser = generateUUID()
     addUUID(user, uuidVote, uuidUser)
 
     # Génération du code de vote
     credential = generateC()
-    print("Identifiant secret de l'électeur (privé): {}".format(credential))  # Clé privée
+    print("Identifiant secret de l'admin (privé): {}".format(credential))  # Clé privée
+
     cDv = generatePublicKey(credential, uuidVote)
-    # addVoteCode(user, uuidVote, cDv)
-    print("Code de vote de l'électeur (public): {}".format(cDv))  # Clé publique
+    print("Code de vote de l'admin (public): {}".format(cDv))  # Clé publique
     addCredentials(user, uuidVote, credential, cDv)
+
+    authorized = [uuidUser]
+    voters = [uuidUser]
+    votersCodes = [cDv]
+
+    print("\nCombien de personnes seront autorisées à dépouiller ?\n\n")
+    choice = int(input("Votre choix : "))
+    for i in range(choice):
+        print("Renseignez les informations suivantes :\n")
+        while True:
+            lname = input('Nom: ')
+            fname = input('Prénom: ')
+            email = input('Adresse email: ')
+
+            if len(lname) == 0 or len(fname) == 0 or len(email) == 0:
+                print("Il manque une information (Nom, Prénom, Mail)\n")
+                continue
+            break
+
+        userFound = getUser(lname, fname, email)
+
+        # Si on ne trouve pas l'utilisateur, on lui créé un compte
+        if not len(userFound):
+            newUUID = generateUUID()
+            newCredential = generateC()
+            newCode = generatePublicKey(newCredential, uuidVote)
+            user = {
+                "lname": lname,
+                "fname": fname,
+                "mail": email,
+                "uuids": [
+                    {
+                        "voteID": uuidVote,
+                        "uuid": newUUID
+                    }
+                ],
+                "Credentials": [
+                    {
+                        "voteID": uuidVote,
+                        "credential": newCredential,
+                        "voteCode": newCode
+                    }
+                ]
+            }
+            voters.append(newUUID)
+            votersCodes.append(newCode)
+            authorized.append(newUUID)
+            addUser(user)
+            userFound = getUser(lname, fname, email)
+            print("Compte créé")
+
+        elif getUUID(userFound, uuidVote) == "":
+            newUUID = generateUUID()
+            newCredential = generateC()
+            newCode = generatePublicKey(newCredential, uuidVote)
+            addUUID(userFound, uuidVote, newUUID)
+            addCredentials(userFound, uuidVote, newCredential, newCode)
+
+            userFound = getUser(lname, fname, email)
+
+        if not getUUID(userFound, uuidVote) in voters:
+            voters.append(getUUID(userFound, uuidVote))
+        if not getVoteCode(userFound, uuidVote) in votersCodes:
+            votersCodes.append(getVoteCode(userFound, uuidVote))
+        if not getUUID(userFound, uuidVote) in authorized:
+            authorized.append(getUUID(userFound, uuidVote))
+
+
+        print("Autorisé ajouté\n")
+
+    # Key generation
+    G = random.choice(range(1, P))
+    a = random.choice(range(1, P))
+    while not pgcd(a, P) == 1:
+        a = random.choice(range(1, P))
+
+    h = fast_exponentiation(g, a, P)
 
     data = {
         "ID": uuidVote,
+        "Keys": {
+            "public": {
+                "h" : h,
+                "g" : G
+            },
+            "private": a
+        },
         "Question": vote[0],
         "Response": vote[1:3],
-        "Voters": [uuidUser],
-        "VoteCodes": [cDv],
+        "Voters": voters,
+        "VoteCodes": votersCodes,
         "Admin": uuidUser,
-        "Authorized": [],
+        "Authorized": authorized,
         "Ballots": [],
         "Result": {}
     }
@@ -206,72 +292,45 @@ def createVote(user):
         print(vote[i])
 
 
-def createBallot(voteID, userUUID, cipherVote, signature):
+def createBallot(voteID, userUUID, cipherVote, q, signature, h):
     data = {
-        "voteID": voteID,
         "voterUUID": userUUID,
-        "choice": cipherVote,
-        "signature": signature
+        "choice": {
+            "vote": cipherVote,
+            "decryptKey": q
+        },
+        "signature": [signature, h]
     }
+    addBallot(data, voteID)
 
 
-def saveVoter(voteID):
-    print("Renseignez les informations suivantes :\n")
-    lname = input("Nom: ")
-    fname = input("Prénom: ")
-    email = input("Email: ")
-
-    userFound = getUser(lname, fname, email)
-
-    # Si on ne trouve pas l'utilisateur, on lui créé un compte
-    if not len(userFound):
-        user = {
-            "lname": lname,
-            "fname": fname,
-            "mail": email,
-            "uuids": [],
-            "Credentials": []
-        }
-
-        addUser(user)
-        print("Compte créé")
-
-    # Rafraichissement
-    userFound = getUser(lname, fname, email)
-
+def saveVoter(voteID, voter):
     # Génération de l'UUID pour le vote
     uuid = generateUUID()
-    addUUID(userFound, voteID, uuid)
+    addUUID(voter, voteID, uuid)
 
     # Génération du code de vote
     credential = generateC()
     print("Identifiant secret de l'électeur (privé): {}".format(credential))  # Clé privée
-
-    cDv = generatePublicKey(voteID)
-    addVoteCode(user, voteID, cDv)
-
     cDv = generatePublicKey(credential, voteID)
-    # addVoteCode(user, voteID, cDv)
-
     print("Votre code de vote de l'électeur (public): {}".format(cDv))  # Clé publique
-    addCredentials(userFound, voteID, credential, cDv)
+    addCredentials(voter, voteID, credential, cDv)
 
     # Rafraichissement
-    userFound = getUser(lname, fname, email)
+    userFound = getUser(voter["lname"], voter["fname"], voter["mail"])
     addVoter(userFound, voteID)
-
-    print("\nCette personne sera-t-elle autorisée à dépouiller ?\n\n"
-          "1 - Oui.\n"
-          "0 - Non.\n")
-    choice = int(input("Votre choix : "))  # AJOUT DES DROITS DEPOUILLEMENT
-    if choice:
-        addAuthorized(userFound, voteID)
 
     print("Electeur enregistré ! \n")
 
 
+def hasAlreadyVote(uuidUser, voteID):
+    for ballot in getAllBallots(voteID):
+        if uuidUser == ballot["voterUUID"]:
+            return ballot
+    return []
+
+
 def saveVote(user, voteID):
-    # PDDBkK3YBE6APr
     credential = input("Veuillez indiquer votre identifiant secret (cn) : ")
     while not verifyCredential(credential, voteID):
         print("Code incorrect.\n")
@@ -280,8 +339,12 @@ def saveVote(user, voteID):
         if credential == "q":
             return
 
-    print("Authentification réussie. Procédez au vote. \n")
+    print("Authentification réussie...\n")
     vote = getVote(voteID)
+    if hasAlreadyVote(getUUID(user, voteID), voteID):
+        print("Vous avez déjà voté\n")
+        return
+
     print("Question: {}".format(vote["Question"]))
     i = 1
     for reponse in vote["Response"]:
@@ -295,43 +358,41 @@ def saveVote(user, voteID):
         if idResponse == "q":
             return
 
-    # TODO : Signature du vote
-    cipherVote = "1234"
-    signature = "zdadzcv"
-    newBallot = createBallot(voteID, getUUID(user, voteID), cipherVote, signature)
-    addBallot(newBallot, voteID)
+    h, G = getVotePubKeys(voteID)
+    cipherVote, q = cryptVote(vote["Response"][idResponse - 1], h, G)
+
+    signature, h = generateSignature(g, P, str(vote["Response"][idResponse - 1]).encode("utf-8"), credential)
+    createBallot(voteID, getUUID(user, voteID), cipherVote, q, signature, h)
 
     print("Vote enregistré ! \n")
 
 
 def checkVote(voteID):
     ballots = getAllBallots(voteID)
-    voteCodes = getAllVoteCodes(voteID)
 
-    # TODO : Vérification des ballots
-
-    # for ballot in ballots:
-    # checkBallot(ballot)
+    for ballot in ballots:
+        if not verifySignature(ballot["choice"]["vote"], ballot["signature"][1],
+                               ballot["signature"][0], ballot["choice"]["decryptKey"], getVotePrivateKey(voteID)):
+            user = getUserFromUUID(ballot["voterUUID"])
+            print("Le bulletin de {} - {} n'est pas authentique. Il a été retiré".format(user["fname"], user["lname"]))
+            deleteBallot(ballot, voteID)
 
     print("Vote vérifié ! \n")
 
 
 def counting(voteID):
     ballots = getAllBallots(voteID)
-
-
-    # TODO : Déchiffer chaque bulletin
-
     result = []
     for ballot in ballots:
-        decryptedBallotVote = decryptVote(ballot["choice"], 1, 2) #Alpha Beta
+        q = ballot["choice"]["decryptKey"]
+        decryptedBallotVote = decryptVote(ballot["choice"]["vote"], q, getVotePrivateKey(voteID))
         result.append(decryptedBallotVote)
 
-
     grouped = collections.Counter(result).items()  # Grouping votes to auto count them
-
-    winner, nbVote = [], 0
-    for dic in grouped:
+    print(dict(grouped))
+    winner = []
+    nbVote = 0
+    for dic in dict(grouped):
         for key in dic.keys():  # Associated response
             response = key
         for value in dic.values():  # Count
@@ -342,25 +403,10 @@ def counting(voteID):
             continue
         if count == nbvote:
             winner.append(response)
-
     return winner, nbvote
 
 
 ###---------- CHIFFREMENT / SIGNATURES ----------###
-def RSA():
-    while not miller_rabin(P, 25):  # Génération d'un autre premier de 10 bits
-        Q = random.getrandbits(10)
-
-    n = P * Q
-    phi = (P - 1) * (Q - 1)
-    e = random.getrandbits(10)
-    while not (pgcd(e, P - 1) == 1) and not (pgcd(e, Q - 1) == 1):
-        e = random.getrandbits(10)
-
-    d = euclide_inverse_modulaire(e, phi)
-    return (n, e), d
-
-
 def tobase58(car):
     alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
     return alphabet.index(car)
@@ -428,91 +474,75 @@ def generateUUID():
     return str(uuid.uuid4())
 
 
-def cryptVote(msg, g, p):
-    r = int(''.join(random.choice(string.digits) for x in range(3)))
+def cryptVote(msg, h, G):
+    en_msg = []
+    print("Vote:", msg)
+    encrypted_msg = [None] * len(msg)
 
-    while generate(r, p):
-        r = int(''.join(random.choice(string.digits) for x in range(3)))
+    k = random.choice(range(1, P))
+    while not pgcd(k, P) == 1:
+        k = random.choice(range(1, P))
 
-    m = int(''.join(random.choice(string.digits) for x in range(3)))
-
-    while generate(r, p):
-        m = int(''.join(random.choice(string.digits) for x in range(3)))
-
-    alpha = fast_exponentiation(g, r, p)
-    alphaPrim = fast_exponentiation(alpha ,m ,p)
-    beta = fast_exponentiation(g, m, p)
-
-    encrypted_msg = []
+    q = fast_exponentiation(G, k, P)%P
+    s = fast_exponentiation(h, k, P)%P
 
     for i in range(0, len(msg)):
-        encrypted_msg.append(msg[i])
+        en_msg.append(msg[i])
 
-    print("Message à chiffrer : ", msg)
-    print(alpha)
-    print(beta)
-    print(alphaPrim)
+    for i in range(0, len(en_msg)):
+        encrypted_msg[i] = s * ord(msg[i])
 
-    for i in range(0, len(encrypted_msg)):
-        encrypted_msg[i] = alphaPrim * ord(encrypted_msg[i])
-
-    decrypted_msg = decryptVote(encrypted_msg, beta, r, p)
-    decrypted_msg = ''.join(decrypted_msg)
-
-    print("Message déchiffré : ", decrypted_msg)
-
-    return
+    print("Crypted:", encrypted_msg)
+    return encrypted_msg, q
 
 
-
-def decryptVote(encrypt_msg, beta, r, p):
+def decryptVote(encrypt_msg, q, a):
+    print("Crypted:", encrypt_msg)
     decrypted_msg = []
+    s = fast_exponentiation(q, a, P)%P
 
-    betaPrim = fast_exponentiation(beta, r, p)
+    print("q : {} | a : {}".format(q, a))
 
     for i in range(0, len(encrypt_msg)):
-        decrypted_msg.append(chr(int(encrypt_msg[i] / betaPrim)))
+        decrypted_msg.append(chr(int(encrypt_msg[i] / s)))
 
+    decrypted_msg = ''.join(decrypted_msg)
+    print("Decrypted:", decrypted_msg)
     return decrypted_msg
 
-#-----------------Partie signature-----------------#
 
-def generateSignature(g, p, c):
-    w = int(''.join(random.choice(string.digits) for x in range(3)))
+# -----------------Partie signature-----------------#
+def generateSignature(g, p, msg, credential):  # ElGamal
+    x = BigEndianToInteger(StringToBigEndian(credential))
+    h = fast_exponentiation(g, x, p)
 
+    hM = int(hashlib.sha256(msg).hexdigest(), 16)
 
-    while generate(w, p):
-        w = int(''.join(random.choice(string.digits) for x in range(3)))
+    y = random.choice(range(1, p - 2))
+    while not pgcd(y, p - 1) == 1:
+        y = random.choice(range(1, p - 2))
 
-    A = fast_exponentiation(g, w, p)
+    s1 = g ** y
+    invY = euclide_inverse_modulaire(y, p - 1)
 
-    y = int(''.join(random.choice(string.digits) for x in range(3)))
+    s2 = invY * (hM - x * s1) % (p - 1)
 
-    while generate(y, p):
-        y = int(''.join(random.choice(string.digits) for x in range(3)))
-
-    Y = fast_exponentiation(g, y, p)
-
-    resp = (y + int(c, 36) * w)
-    #resp = w + int(c, 36) * A % p
-
-    print(int(c, 36))
-
-    verifSignature(g, p, resp, int(c, 36), A, Y)
-
-    return
+    signature = (s1, s2)
+    return signature, h
 
 
-def verifSignature(g, p, resp, c, A, Y):
-    val1 = pow(g, resp) % p
-    val2 = (Y * (A ** c)) % p
+def verifySignature(encrypted_msg, h, signature, q ,a):
+    # P, g variables globales fixes
+    msg = decryptVote(encrypted_msg, q, a)
 
-    if (val1 == val2):
-        print("ok")
-    else:
-        print("nope")
+    hM = int(hashlib.sha256(msg).hexdigest(), 16)
+    (s1, s2) = signature
+    val1 = (h ** s1) * (s1 ** s2) % P
+    val2 = fast_exponentiation(g, hM, P)
 
-    return
+    if not (val1 == val2):
+        return False
+    return True
 
 
 # ---------- VERIFICATIONS --------- #

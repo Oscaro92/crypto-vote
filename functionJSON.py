@@ -5,6 +5,28 @@ import struct
 ###---------- FONCTIONS JSON----------###
 
 ##---- VOTES.JSON ----##
+def getVotePubKeys(voteID):
+    with open("json/votes.json", "r") as votes:
+        dataVote = json.load(votes)
+
+        matchVote = next((vote for vote in dataVote if vote["ID"] == voteID), 0)
+        if not matchVote:
+            print("Erreur lors de la récupération de vote : le vote {} n'a pas été trouvé.".format(voteID))
+            return 0
+        return matchVote["Keys"]["public"]["h"], matchVote["Keys"]["public"]["g"]
+
+
+def getVotePrivateKey(voteID):
+    with open("json/votes.json", "r") as votes:
+        dataVote = json.load(votes)
+
+        matchVote = next((vote for vote in dataVote if vote["ID"] == voteID), 0)
+        if not matchVote:
+            print("Erreur lors de la récupération de vote : le vote {} n'a pas été trouvé.".format(voteID))
+            return 0
+        return matchVote["Keys"]["private"]
+
+
 def deleteAllVote():
     data = [
         {
@@ -130,16 +152,16 @@ def findVotesWhereAuthorized(user):
 
         return [vote for vote in dataVote
                 for person in user["uuids"]
-                for person["uuid"] in vote["Authorized"]
+                if person["uuid"] in vote["Authorized"]
                 ]
 
 
-def emptyVoteVoteCodes(voteID):
+def emptyVoteVoteCodes():
     with open("json/votes.json", "r") as votes:
         dataVote = json.load(votes)
 
-        matchVote = next((vote for vote in dataVote if vote["ID"] == voteID), 0)
-        matchVote["VoteCodes"] = []
+        for vote in dataVote:
+            vote["VoteCodes"] = []
 
     with open("json/votes.json", "w") as votes:
         json.dump(dataVote, votes)
@@ -185,6 +207,17 @@ def getAllBallots(voteID):
 
         matchVote = next((vote for vote in dataVote if vote["ID"] == voteID), 0)
         return matchVote["Ballots"]
+
+
+def deleteBallot(ballot, voteID):
+    with open("json/votes.json", "r") as votes:
+        dataVote = json.load(votes)
+
+        matchVote = next((vote for vote in dataVote if vote["ID"] == voteID), 0)
+        matchVote["Ballots"].remove(ballot)
+
+    with open("json/votes.json", "w") as votes:
+        json.dump(dataVote, votes)
 
 
 def getAllVoteCodes(voteID):
@@ -280,11 +313,9 @@ def getUUID(user, voteID):
 
         matchVote = next((uuid for uuid in matchUser["uuids"]
                           if uuid["voteID"] == voteID)
-                         , 0)
-        if not matchUser:
-            print("Erreur lors de la récupération de l'UUID : l'utilisateur n'a pas accès au vote {}.".format(voteID))
-            return
-
+                         , "")
+        if matchVote == "":
+            return matchVote
         return matchVote["uuid"]
 
 

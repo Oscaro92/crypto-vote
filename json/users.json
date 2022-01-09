@@ -3,8 +3,19 @@
     "lname": "Moisset",
     "fname": "Oscar",
     "mail": "oscar.moisset@utt.fr",
-    "uuids": [],
-    "Credentials": []
+    "uuids": [
+      {
+        "voteID": "5edddef5-6a6c-4a59-8b7e-49fb7e92bfdd",
+        "uuid": "d45aa0c6-2981-4d84-ae8b-6e30ac90fc07"
+      }
+    ],
+    "Credentials": [
+      {
+        "voteID": "5edddef5-6a6c-4a59-8b7e-49fb7e92bfdd",
+        "credential": "68DCMeWb9FcdLMp",
+        "voteCode": 655
+      }
+    ]
   },
   {
     "lname": "Kuhn",
@@ -12,15 +23,15 @@
     "mail": "valentin.kuhn@utt.fr",
     "uuids": [
       {
-        "voteID": "0f760d18-3ffa-450b-8b3d-8513b4346353",
-        "uuid": "44f310b7-36e4-4521-aad8-40eef4c57954"
+        "voteID": "5edddef5-6a6c-4a59-8b7e-49fb7e92bfdd",
+        "uuid": "ac968e9b-bf60-4cb8-8122-90be2d6ca82b"
       }
     ],
     "Credentials": [
       {
-        "voteID": "0f760d18-3ffa-450b-8b3d-8513b4346353",
-        "credential": "wTa6NNTPrN9wsA6",
-        "voteCode": 61
+        "voteID": "5edddef5-6a6c-4a59-8b7e-49fb7e92bfdd",
+        "credential": "2NduHX2QWwtRDbe",
+        "voteCode": 52
       }
     ]
   },

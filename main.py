@@ -59,7 +59,47 @@ def start():
                         if not choosenVote:
                             print("Choisissez un vote dans la liste (le numéro ;) )\n")
                         else:
-                            saveVoter(choosenVote["ID"])
+                            print("Renseignez les informations suivantes :\n")
+                            while True:
+                                lname = input('Nom: ')
+                                fname = input('Prénom: ')
+                                email = input('Adresse email: ')
+
+                                if len(lname) == 0 or len(fname) == 0 or len(email) == 0:
+                                    print("Il manque une information (Nom, Prénom, Mail)\n")
+                                    continue
+                                break
+
+                            userFound = getUser(lname, fname, email)
+
+                            # Si on ne trouve pas l'utilisateur, on lui créé un compte
+                            if not len(userFound):
+                                newUUID = generateUUID()
+                                newCredential = generateC()
+                                newCode = generatePublicKey(newCredential, choosenVote["ID"])
+                                user = {
+                                    "lname": lname,
+                                    "fname": fname,
+                                    "mail": email,
+                                    "uuids": [
+                                        {
+                                            "voteID": choosenVote["ID"],
+                                            "uuid": newUUID
+                                        }
+                                    ],
+                                    "Credentials": [
+                                        {
+                                            "voteID": choosenVote["ID"],
+                                            "credential": newCredential,
+                                            "voteCode": newCode
+                                        }
+                                    ]
+                                }
+
+                                addUser(user)
+                                userFound = getUser(lname, fname, email)
+                                print("Compte créé")
+                            saveVoter(choosenVote["ID"], userFound)
                             break
 
             # VOTER
@@ -73,8 +113,7 @@ def start():
                     i = 1
 
                     closed = [vote for vote in votes
-                              if not vote["Result"]]
-
+                              if vote["Result"]]
                     for vote in votes:
                         print("{} - {}\n".format(i, vote["Question"]))
                         i += i
