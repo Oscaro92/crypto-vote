@@ -5,9 +5,42 @@ import string
 import random
 import hashlib
 import struct
+import collections
 
 
 # ---------- INITIALISATION ----------#
+
+# Nécessaire car la clé publique change en fonction de l'instance du programme.
+def init():
+    users = getAllUsers()
+    for user in users:
+        votes = findVotesWhereVoter(user)
+        for vote in votes:
+            emptyVoteVoteCodes(vote["ID"])
+            credential = getCredential(user, vote["ID"])
+            newVoteCode = generatePublicKey(credential, vote["ID"])
+            setUserVoteCode(user, vote["ID"], newVoteCode)
+            addVoteVoteCode(vote["ID"], newVoteCode)
+
+
+def connect():
+    while True:
+        lname = input('Nom: ')
+        fname = input('Prénom: ')
+        email = input('Adresse email: ')
+
+        if len(lname) == 0 or len(fname) == 0 or len(email) == 0:
+            print("Il manque une information (Nom, Prénom, Mail)\n")
+            continue
+
+        userFound = getUser(lname, fname, email)
+        if userFound == []:
+            print("Identifiants incorrects \n")
+            continue
+
+        return userFound, lname, fname, email
+
+
 def miller_rabin(n, k):
     if n == 1:
         return False
@@ -115,7 +148,7 @@ def pgcd(a, b):
 # Ici, on prendra P = 10bits car la mémoire ne permet pas de calculer avec P 512bits
 # On récupère un générateur aléatoire de P
 
-P = random.getrandbits(10) #Doit être différent de 1 !
+P = random.getrandbits(10)  # Doit être différent de 1 !
 while not miller_rabin(P, 25):
     P = random.getrandbits(10)
 
@@ -148,18 +181,21 @@ def createVote(user):
     # Génération du code de vote
     credential = generateC()
     print("Identifiant secret de l'électeur (privé): {}".format(credential))  # Clé privée
-    cDv = generatePublicKey(uuidVote)
-    addVoteCode(user, uuidVote, cDv)
-    print("Votre code de vote de l'électeur (public): {}".format(cDv))  # Clé publique
-    addCredential(user, uuidVote, credential)
+    cDv = generatePublicKey(credential, uuidVote)
+    # addVoteCode(user, uuidVote, cDv)
+    print("Code de vote de l'électeur (public): {}".format(cDv))  # Clé publique
+    addCredentials(user, uuidVote, credential, cDv)
 
     data = {
         "ID": uuidVote,
         "Question": vote[0],
         "Response": vote[1:3],
-        "Voters": [cDv],
+        "Voters": [uuidUser],
+        "VoteCodes": [cDv],
         "Admin": uuidUser,
-        "Authorized": []
+        "Authorized": [],
+        "Ballots": [],
+        "Result": {}
     }
     addVote(data)
 
@@ -168,6 +204,15 @@ def createVote(user):
     print("Les réponses possibles sont : ")
     for i in range(1, nbAns + 1):
         print(vote[i])
+
+
+def createBallot(voteID, userUUID, cipherVote, signature):
+    data = {
+        "voteID": voteID,
+        "voterUUID": userUUID,
+        "choice": cipherVote,
+        "signature": signature
+    }
 
 
 def saveVoter(voteID):
@@ -201,64 +246,104 @@ def saveVoter(voteID):
     # Génération du code de vote
     credential = generateC()
     print("Identifiant secret de l'électeur (privé): {}".format(credential))  # Clé privée
+
     cDv = generatePublicKey(voteID)
     addVoteCode(user, voteID, cDv)
+
+    cDv = generatePublicKey(credential, voteID)
+    # addVoteCode(user, voteID, cDv)
+
     print("Votre code de vote de l'électeur (public): {}".format(cDv))  # Clé publique
-    addCredential(user, voteID, credential)
+    addCredentials(userFound, voteID, credential, cDv)
 
     # Rafraichissement
     userFound = getUser(lname, fname, email)
     addVoter(userFound, voteID)
 
-    # print("\nCette personne sera-t-elle autorisée à dépouiller ?\n\n"
-    #       "1 - Oui.\n"
-    #       "0 - Non.\n")
-    # choice = int(input("Votre choix : "))  # AJOUT DES DROITS DEPOUILLEMENT
-    # if choice:
-    #     addAuthorized(userFound, voteID)
+    print("\nCette personne sera-t-elle autorisée à dépouiller ?\n\n"
+          "1 - Oui.\n"
+          "0 - Non.\n")
+    choice = int(input("Votre choix : "))  # AJOUT DES DROITS DEPOUILLEMENT
+    if choice:
+        addAuthorized(userFound, voteID)
 
     print("Electeur enregistré ! \n")
 
 
-def saveVote(voteID):
+def saveVote(user, voteID):
     # PDDBkK3YBE6APr
-    cDv = input("Veuillez indiquer votre code de vote : \n")
-    while not verifyVoteCode(cDv, voteID):
+    credential = input("Veuillez indiquer votre identifiant secret (cn) : ")
+    while not verifyCredential(credential, voteID):
         print("Code incorrect.\n")
-        cDv = input("Veuillez indiquer votre code de vote [q] pour quitter: ")
+        credential = input("Veuillez indiquer votre code de vote [q] pour quitter: ")
 
-        if cDv == "q":
+        if credential == "q":
             return
 
     print("Authentification réussie. Procédez au vote. \n")
     vote = getVote(voteID)
-    print("{} \n {}".format(vote["Question"], vote["Response"]))
+    print("Question: {}".format(vote["Question"]))
+    i = 1
+    for reponse in vote["Response"]:
+        print("{} - {}\n".format(i, reponse))
+        i += 1
 
-    idResponse = input("Renseignez votre réponse : ")
+    idResponse = int(input("Renseignez votre réponse : "))
     while idResponse < 0 and len(vote["Response"]) < idResponse:
         print("Choix impossible.\n")
         idResponse = input("Renseignez votre réponse [q] pour quitter : ")
         if idResponse == "q":
             return
 
-    # #admin
-    # mdp = input("Pour valider votre vote et déposer votre bulletin, renseignez votre mot de passe: ")
-    # while not verifyPassword(mdp, voteID):
-    #     print("Ce mot de passe n'est pas valide. \n")
-    #     mdp = input("Renseignez votre mot de passe [q] pour quitter: ")
-    #
-    #     if mdp == "q":
-    #         return
+    # TODO : Signature du vote
+    cipherVote = "1234"
+    signature = "zdadzcv"
+    newBallot = createBallot(voteID, getUUID(user, voteID), cipherVote, signature)
+    addBallot(newBallot, voteID)
 
     print("Vote enregistré ! \n")
 
 
-def checkVote():
+def checkVote(voteID):
+    ballots = getAllBallots(voteID)
+    voteCodes = getAllVoteCodes(voteID)
+
+    # TODO : Vérification des ballots
+
+    # for ballot in ballots:
+    # checkBallot(ballot)
+
     print("Vote vérifié ! \n")
 
 
-def counting():
-    print("Dépouillement fait ! \n")
+def counting(voteID):
+    ballots = getAllBallots(voteID)
+
+
+    # TODO : Déchiffer chaque bulletin
+
+    result = []
+    for ballot in ballots:
+        decryptedBallotVote = decryptVote(ballot["choice"], 1, 2) #Alpha Beta
+        result.append(decryptedBallotVote)
+
+
+    grouped = collections.Counter(result).items()  # Grouping votes to auto count them
+
+    winner, nbVote = [], 0
+    for dic in grouped:
+        for key in dic.keys():  # Associated response
+            response = key
+        for value in dic.values():  # Count
+            count = value
+        if count > nbVote:
+            winner = [response]
+            nbvote = count
+            continue
+        if count == nbvote:
+            winner.append(response)
+
+    return winner, nbvote
 
 
 ###---------- CHIFFREMENT / SIGNATURES ----------###
@@ -334,9 +419,8 @@ def secret(credential, uuid):
     return secretExponent % (P - 1)  # valeur q = P-1 (ordre du générateur g de P)
 
 
-def generatePublicKey(uuid):
-    credential = generateC()
-    s = secret(credential, uuid.replace("-", ''))
+def generatePublicKey(credential, uuidVote):
+    s = secret(credential, uuidVote.replace("-", ''))
     return fast_exponentiation(g, s, P)
 
 
@@ -380,6 +464,7 @@ def cryptVote(msg, g, p):
     return
 
 
+
 def decryptVote(encrypt_msg, beta, r, p):
     decrypted_msg = []
 
@@ -390,11 +475,11 @@ def decryptVote(encrypt_msg, beta, r, p):
 
     return decrypted_msg
 
-
 #-----------------Partie signature-----------------#
 
 def generateSignature(g, p, c):
     w = int(''.join(random.choice(string.digits) for x in range(3)))
+
 
     while generate(w, p):
         w = int(''.join(random.choice(string.digits) for x in range(3)))
@@ -408,21 +493,14 @@ def generateSignature(g, p, c):
 
     Y = fast_exponentiation(g, y, p)
 
-    #resp = w + int(c, 36) * A % p
     resp = (y + int(c, 36) * w)
+    #resp = w + int(c, 36) * A % p
 
     print(int(c, 36))
 
     verifSignature(g, p, resp, int(c, 36), A, Y)
 
-    return resp
-
-# y = random.randint(1, 97)
-# Y = pow(generator, y) % PRIMENO
-#
-# c = random.randint(1, 97)
-#
-# z = (y + c * secretVal)
+    return
 
 
 def verifSignature(g, p, resp, c, A, Y):
@@ -435,3 +513,18 @@ def verifSignature(g, p, resp, c, A, Y):
         print("nope")
 
     return
+
+
+# ---------- VERIFICATIONS --------- #
+def verifyCredential(credential, voteID):
+    if not len(credential) == 15:
+        return False
+
+    # Verification du checksum
+    fourteen = credential[:14]
+    if not checksum(fourteen) == credential[14]:
+        return False
+
+    # Verification du code de vote
+    testKey = generatePublicKey(credential, voteID)
+    return verifyVoteCode(testKey, voteID)
