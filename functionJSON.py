@@ -13,7 +13,7 @@ def getVotePubKeys(voteID):
         if not matchVote:
             print("Erreur lors de la récupération de vote : le vote {} n'a pas été trouvé.".format(voteID))
             return 0
-        return matchVote["Keys"]["public"]["h"], matchVote["Keys"]["public"]["g"]
+        return matchVote["Keys"]["public"]
 
 
 def getVotePrivateKey(voteID):

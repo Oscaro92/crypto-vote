@@ -258,20 +258,16 @@ def createVote(user):
         print("Autorisé ajouté\n")
 
     # Key generation
-    G = random.choice(range(1, P))
     a = random.choice(range(1, P))
     while not pgcd(a, P) == 1:
         a = random.choice(range(1, P))
 
-    h = fast_exponentiation(g, a, P)
+    ga = fast_exponentiation(g, a, P)
 
     data = {
         "ID": uuidVote,
         "Keys": {
-            "public": {
-                "h" : h,
-                "g" : G
-            },
+            "public": ga,
             "private": a
         },
         "Question": vote[0],
@@ -292,12 +288,12 @@ def createVote(user):
         print(vote[i])
 
 
-def createBallot(voteID, userUUID, cipherVote, q, signature, h):
+def createBallot(voteID, userUUID, cipherVote, gk, signature, h):
     data = {
         "voterUUID": userUUID,
         "choice": {
             "vote": cipherVote,
-            "decryptKey": q
+            "decryptKey": gk
         },
         "signature": [signature, h]
     }
@@ -358,11 +354,11 @@ def saveVote(user, voteID):
         if idResponse == "q":
             return
 
-    h, G = getVotePubKeys(voteID)
-    cipherVote, q = cryptVote(vote["Response"][idResponse - 1], h, G)
+    ga = getVotePubKeys(voteID)
+    cipherVote, gk = cryptVote(vote["Response"][idResponse - 1], ga)
 
     signature, h = generateSignature(g, P, str(vote["Response"][idResponse - 1]).encode("utf-8"), credential)
-    createBallot(voteID, getUUID(user, voteID), cipherVote, q, signature, h)
+    createBallot(voteID, getUUID(user, voteID), cipherVote, gk, signature, h)
 
     print("Vote enregistré ! \n")
 
@@ -384,8 +380,8 @@ def counting(voteID):
     ballots = getAllBallots(voteID)
     result = []
     for ballot in ballots:
-        q = ballot["choice"]["decryptKey"]
-        decryptedBallotVote = decryptVote(ballot["choice"]["vote"], q, getVotePrivateKey(voteID))
+        gk = ballot["choice"]["decryptKey"]
+        decryptedBallotVote = decryptVote(ballot["choice"]["vote"], gk, getVotePrivateKey(voteID))
         result.append(decryptedBallotVote)
 
     grouped = collections.Counter(result).items()  # Grouping votes to auto count them
@@ -474,7 +470,7 @@ def generateUUID():
     return str(uuid.uuid4())
 
 
-def cryptVote(msg, h, G):
+def cryptVote(msg, ga):
     en_msg = []
     print("Vote:", msg)
     encrypted_msg = [None] * len(msg)
@@ -483,8 +479,8 @@ def cryptVote(msg, h, G):
     while not pgcd(k, P) == 1:
         k = random.choice(range(1, P))
 
-    q = fast_exponentiation(G, k, P)%P
-    s = fast_exponentiation(h, k, P)%P
+    gk = fast_exponentiation(g, k, P)%P
+    s = fast_exponentiation(ga, k, P)%P
 
     for i in range(0, len(msg)):
         en_msg.append(msg[i])
@@ -493,18 +489,17 @@ def cryptVote(msg, h, G):
         encrypted_msg[i] = s * ord(msg[i])
 
     print("Crypted:", encrypted_msg)
-    return encrypted_msg, q
+    return encrypted_msg, gk
 
-
-def decryptVote(encrypt_msg, q, a):
+def decryptVote(encrypt_msg, gk, a):
     print("Crypted:", encrypt_msg)
     decrypted_msg = []
-    s = fast_exponentiation(q, a, P)%P
+    s = fast_exponentiation(gk, a, P)%P
 
-    print("q : {} | a : {}".format(q, a))
+    print("gk : {} | a : {}".format(gk, a))
 
     for i in range(0, len(encrypt_msg)):
-        decrypted_msg.append(chr(int(encrypt_msg[i] / s)))
+        decrypted_msg.append(chr(int(encrypt_msg[i] * euclide_inverse_modulaire(s, P))))
 
     decrypted_msg = ''.join(decrypted_msg)
     print("Decrypted:", decrypted_msg)
